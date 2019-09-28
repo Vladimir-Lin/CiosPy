@@ -26,10 +26,21 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
 
   def __init__(self, icon, parent=None):
     QSystemTrayIcon.__init__(self, icon, parent)
-    menu = QMenu(parent)
-    restartAction = menu.addAction("重新啟動")
+    menu          = QMenu ( parent )
+    # CIOS Packages
+    galleryAction = menu      . addAction("圖庫系統")
+    menu          . addSeparator ( )
+    # External Packages
+    pkgMenu       = menu      . addMenu ( "外部套件" )
+    mplayerAction = pkgMenu   . addAction("SMPlayer")
+    mplayerAction . setIcon ( QIcon(ActualFile("images/64x64/play.png")) )
+    # Packages Menu
+    menu          . addSeparator ( )
+    # Restart
+    restartAction = menu      . addAction("重新啟動")
     restartAction . triggered . connect ( self . Restart )
-    exitAction    = menu . addAction ( "離開" )
+    # Exit
+    exitAction    = menu      . addAction ( "離開" )
     exitAction    . triggered . connect ( self . Quit )
     self.setContextMenu(menu)
 

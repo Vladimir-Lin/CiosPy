@@ -44,6 +44,7 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
     modelMenu     = menu      . addMenu ( "物體模型系統" )
     scienceMenu   = menu      . addMenu ( "科學試算系統" )
     databaseMenu  = menu      . addMenu ( "資料庫系統" )
+    depotMenu     = menu      . addMenu ( "軟體倉庫" )
     menu          . addSeparator ( )
     # Development System
     devMenu       = menu      . addMenu ( "開發環境" )

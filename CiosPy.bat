@@ -1,1 +1,2 @@
-pythonw CiosPy.py
+start pythonw CiosPy.py
+exit

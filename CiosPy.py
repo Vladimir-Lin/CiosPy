@@ -18,19 +18,29 @@ from PyQt5.QtWidgets import QAction
 from PyQt5.QtGui import QIcon
 from PyQt5 import QtGui
 
+def ActualFile ( filename ) :
+  return os . path . dirname ( os . path . abspath (__file__) ) + "/" + filename
+
 class SystemTrayIcon ( QSystemTrayIcon ) :
 
-    def __init__(self, icon, parent=None):
-        QSystemTrayIcon.__init__(self, icon, parent)
-        menu = QMenu(parent)
-        exitAction = menu.addAction("離開")
-        exitAction . triggered . connect ( self . Quit )
-        self.setContextMenu(menu)
+  def __init__(self, icon, parent=None):
+    QSystemTrayIcon.__init__(self, icon, parent)
+    menu = QMenu(parent)
+    restartAction = menu.addAction("重新啟動")
+    restartAction . triggered . connect ( self . Restart )
+    exitAction    = menu.addAction("離開")
+    exitAction    . triggered . connect ( self . Quit )
+    self.setContextMenu(menu)
 
-    def Quit ( self ) :
-      self . hide ( ) ;
-      qApp . quit ( ) ;
+  def Restart ( self ) :
+    rstv = ActualFile ( "Restart.py" )
+    os   . system ( "start python " + rstv )
+    self . hide ( )
+    qApp . quit ( )
 
+  def Quit ( self ) :
+    self . hide ( )
+    qApp . quit ( )
 
 def main():
     app = QApplication(sys.argv)

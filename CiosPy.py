@@ -4,6 +4,7 @@ import getopt
 import time
 import requests
 import threading
+import gettext
 import mysql.connector
 from mysql.connector import Error
 import Actions
@@ -28,7 +29,7 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
     menu = QMenu(parent)
     restartAction = menu.addAction("重新啟動")
     restartAction . triggered . connect ( self . Restart )
-    exitAction    = menu.addAction("離開")
+    exitAction    = menu . addAction ( "離開" )
     exitAction    . triggered . connect ( self . Quit )
     self.setContextMenu(menu)
 
@@ -46,7 +47,7 @@ def main():
     app = QApplication(sys.argv)
 
     w = QWidget()
-    trayIcon = SystemTrayIcon(QIcon("D:/CIOS/CiosPy/images/64x64/Menu.png"), w)
+    trayIcon = SystemTrayIcon(QIcon(ActualFile("images/64x64/Menu.png")), w)
 
     trayIcon.show()
     sys.exit(app.exec_())

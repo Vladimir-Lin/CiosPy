@@ -67,8 +67,7 @@ def CreateTables ( ) :
     sys . exit ( 0 )
 
   SC . Prepare ( )
-  UTS = CIOS . Database . Templates . CiosTableStructures
-  SC . CreateStructures ( UTS )
+  SC . CreateStructures ( CIOS . Database . Templates . CiosTableStructures )
   SC . Close ( )
 
 if __name__ == '__main__':

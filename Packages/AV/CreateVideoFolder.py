@@ -17,6 +17,10 @@ rootdir = os . path . abspath ( rootdir )
 cwdir   = os . getcwd ( )
 
 for i in range ( 1 , len ( sys . argv ) ) :
-  name = sys . argv [ i ]
-  dname = cwdir + "/" + name
-  shutil . copytree ( rootdir , dname )
+  name   = sys . argv [ i ]
+  dname  = cwdir + "/" + name
+  fname  = dname + "/scripts/name.txt"
+  shutil . copytree ( rootdir , dname         )
+  f      = open     ( fname   , 'wb'          )
+  f      . write    ( name . encode ( "utf8") )
+  f      . close    (                         )

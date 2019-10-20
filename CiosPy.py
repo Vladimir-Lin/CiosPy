@@ -168,6 +168,9 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
     # Drax
     draxAction    = avExtraMenu . addAction ( "Drax" )
     draxAction    . triggered . connect ( self . Drax )
+    # Aegisub
+    aegisubAction = avExtraMenu . addAction ( "Aegisub" )
+    aegisubAction . triggered . connect ( self . Aegisub )
     # AV IDE Mux
     draxAction    = avExtraMenu . addAction ( "AV IDE Mux" )
     draxAction    . triggered . connect ( self . AvIDEmux )
@@ -214,6 +217,9 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
 
   def Drax ( self ) :
     RunSystem ( "D:/Programs/Drax/Drax/start.bat" )
+
+  def Aegisub ( self ) :
+    RunSystem ( "D:/Programs/Aegisub/aegisub32.exe" )
 
   def AvIDEmux ( self ) :
     RunSystem ( "D:/Programs/Avidemux/2.7/avidemux.exe" )

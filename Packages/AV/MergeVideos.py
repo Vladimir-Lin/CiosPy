@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import sys
 import getopt
@@ -13,72 +14,60 @@ import CIOS
 
 SHOW    = False
 Source  = ""
+Input   = [ ]
 Output  = "Cover.mp4"
-Audio   = "Cover.mp3"
-Silence = "Silence.mp3"
 
 def SayHelp ( ) :
-  print ( "ExtractHeadingClip.py"
+  print ( "MergeVideos.py"
           " -v (--help Help)"
-          " -i (--input VideoFile)"
           " -o (--output VideoFile)"
-          " -a (--audio AudioFile)"
-          " -e (--silence EmptyAudioFile)"
           " -s --show(Show message)" )
 
 def GetOptions ( argv ) :
   global SHOW
-  global Source
+  global Input
   global Output
-  global Audio
-  global Silence
   try :
-    opts, args = getopt.getopt(argv,"i:o:a:e:sv",["input=","output=","audio=","silence=","show","help"])
+    opts, args = getopt.getopt(argv,"o:sv",["output=","show","help"])
   except getopt.GetoptError:
     SayHelp ( )
     sys . exit ( 2 )
+  Input = args
   for opt, arg in opts:
     if opt in ( "-v" , "--help" ) :
       SayHelp ( )
       sys . exit ( 0 )
     elif opt in ("-s", "--show") :
       SHOW    = True
-    elif opt in ("-i", "--input"):
-      Source  = arg
     elif opt in ("-o", "--output"):
       Output  = arg
-    elif opt in ("-a", "--audio"):
-      Audio   = arg
-    elif opt in ("-e", "--silence"):
-      Audio   = arg
   return True
 
-def ExtractHeading ( ) :
+def MergeVideos ( ) :
   global SHOW
-  global Source
+  global Input
   global Output
-  global Audio
-  global Silence
   cwdir = os . getcwd ( )
-  if os . path . isfile ( Output ) :
-    os . remove ( Output )
-  if os . path . isfile ( Audio ) :
-    os . remove ( Audio )
-  if os . path . isfile ( Silence ) :
-    os . remove ( Silence )
-  CMD = f"""ffmpeg -i \"{Source}\" -ss 00:00:00 -t 00:00:07 -async 1 -strict -2 \"{Output}\""""
-  os . system ( CMD )
-  CMD = f"""ffmpeg -i \"{Output}\" -q:a 0 -map a \"{Audio}\""""
-  os . system ( CMD )
+  FILES = [ ]
+  for i in Input :
+    x = i
+    x = x . replace ( "\r" , "" )
+    x = x . replace ( "\n" , "" )
+    FILES . append ( f"file {i}" )
+  TEXT = "\r\n" . join ( FILES )
+  with open ( "video-list.txt" , "w" , encoding="utf-8" ) as file :
+    file . write ( TEXT )
+  CMD = f"ffmpeg -f concat -safe 0 -i video-list.txt -vcodec libx264 -crf 18 -acodec aac -ab 128k -ar 48000 {Output}"
+  os . system ( CMD   )
   os . chdir  ( cwdir )
   return True
 
 if __name__ == '__main__':
   GetOptions ( sys . argv [ 1: ] )
-  if ( len ( Source ) <= 0 ) :
+  if ( len ( Input ) <= 0 ) :
     SayHelp ( )
     sys . exit ( 2 )
   if ( len ( Output ) <= 0 ) :
     SayHelp ( )
     sys . exit ( 2 )
-  ExtractHeading ( )
+  MergeVideos ( )

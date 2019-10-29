@@ -9,7 +9,3 @@ SOURCES += $${PWD}/*.pl
 SOURCES += $${PWD}/*.rb
 SOURCES += $${PWD}/*.rs
 SOURCES += $${PWD}/*.bat
-
-include ($${PWD}/AV/AV.pri)
-include ($${PWD}/Database/Database.pri)
-include ($${PWD}/Voice/Voice.pri)

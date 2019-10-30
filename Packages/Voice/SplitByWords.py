@@ -65,3 +65,5 @@ if __name__ == '__main__':
     sys . exit ( 2 )
   Settings = { "silence" : Silence , "thresh"  : Thresh }
   SplitVoiceByWords ( Input , Output , Settings )
+
+# ffmpeg -i my_video.mp4 -c copy -map 0:a output_audio.mp4

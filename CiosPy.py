@@ -5,11 +5,15 @@ import time
 import requests
 import threading
 import gettext
+import urllib
+import urllib.parse
 import mysql.connector
 from mysql.connector import Error
 import Actions
 import CIOS
+from   CIOS . Voice . Recognizer import Recognizer
 
+from PyQt5 import QtWidgets , QtGui , QtCore
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import qApp
@@ -18,20 +22,107 @@ from PyQt5.QtWidgets import QMenu
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QCursor
-from PyQt5 import QtGui, QtCore
+from PyQt5.QtCore import QObject , pyqtSignal
+
+SysMenu     = None
+KeepRunning = True
+TurnOn      = False
+Language    = "en-US"
 
 def ActualFile ( filename ) :
   return os . path . dirname ( os . path . abspath (__file__) ) + "/" + filename
 
 def RunSystem ( Program ) :
-  os   . system ( "start " + Program )
+  os . system ( "start " + Program )
+
+def SpeechCommand ( ) :
+  global KeepRunning
+  global TurnOn
+  global Language
+  global SysMenu
+  R = Recognizer ( )
+  R . OpenMicrophone ( Device = 1 )
+  while KeepRunning :
+    R . UseMicrophone ( )
+    line = R . Listen ( Language )
+    if ( len ( line ) > 0 ) :
+      line = line . strip ( )
+      line = line . lower ( )
+      if ( TurnOn ) :
+        L = line
+        L = L . split ( )
+        if ( len ( L ) > 0 ) and ( L [ 0 ] == "google" ) :
+          X = line . replace ( "google " , "" )
+          X = urllib . parse . quote_plus ( X )
+          X = f"https://www.google.com/search?q={X}"
+          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ' + X )
+        elif ( line == "computer refuse command" ) :
+          SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
+          TurnOn = False
+        elif ( line == "computer refused command" ) :
+          SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
+          TurnOn = False
+        elif ( line == "computer refuse comment" ) :
+          SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
+          TurnOn = False
+        elif ( line == "computer refused comment" ) :
+          SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
+          TurnOn = False
+        elif ( line == "打開youtube" ) :
+          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.youtube.com' )
+        elif ( line == "open youtube" ) :
+          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.youtube.com' )
+        elif ( line == "open up youtube" ) :
+          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.youtube.com' )
+        elif ( line == "open up google" ) :
+          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.google.com' )
+        elif ( line == "打開google" ) :
+          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.google.com' )
+        elif ( line == "open google" ) :
+          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.google.com' )
+        elif ( line == "open up qt creator" ) :
+          RunSystem ( "D:/Qt/Tools/QtCreator/bin/qtcreator.exe" )
+        elif ( line == "open qt creator" ) :
+          RunSystem ( "D:/Qt/Tools/QtCreator/bin/qtcreator.exe" )
+        elif ( line == "computer restart yourself" ) :
+          SysMenu . Restart ( )
+        elif ( line == "電腦重新啟動" ) :
+          SysMenu . Restart ( )
+        elif ( line == "computer change language to chinese" ) :
+          SysMenu . SendMessage ( "語音命令" , "改變語言為中文" )
+          Language = "zh-TW"
+        elif ( line == "computer change language to japanese" ) :
+          SysMenu . SendMessage ( "語音命令" , "改變語言為日文" )
+          Language = "ja"
+        elif ( line == "改變語言為英文" ) :
+          SysMenu . SendMessage ( "語音命令" , "改變語言為英文" )
+          Language = "en-US"
+        elif ( line == "改變語言為日文" ) :
+          SysMenu . SendMessage ( "語音命令" , "改變語言為日文" )
+          Language = "ja"
+        else :
+          SysMenu . SendMessage ( "無效命令" , line )
+      else :
+        if ( line == "電腦接受命令" ) :
+          SysMenu . SendMessage ( "語音命令" , "開始接受命令" )
+          TurnOn = True
+        if ( line == "computer accept command" ) :
+          SysMenu . SendMessage ( "語音命令" , "開始接受命令" )
+          TurnOn = True
+        elif ( line == "computer accepted command" ) :
+          SysMenu . SendMessage ( "語音命令" , "開始接受命令" )
+          TurnOn = True
+  return True
 
 class SystemTrayIcon ( QSystemTrayIcon ) :
+
+  emitShowMessage = pyqtSignal ( str , str )
 
   def __init__(self, icon, parent=None):
     QSystemTrayIcon . __init__ ( self , icon , parent )
     self . setToolTip ( "CIOS系統選單" )
     self . activated . connect ( self . onTrayActivated )
+    self . emitShowMessage . connect ( self . doShowMessage )
     # Configure Menu
     menu          = QMenu ( parent )
     # CIOS Packages
@@ -202,13 +293,23 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
     if ( reason == 3 ) :
       self . Menu . exec_ ( QCursor . pos ( ) )
 
+  def SendMessage ( self , TITLE , MESSAGE ) :
+    self . emitShowMessage . emit ( TITLE , MESSAGE )
+
+  def doShowMessage ( self , TITLE , MESSAGE ) :
+    self . showMessage ( TITLE , MESSAGE )
+
   def Restart ( self ) :
+    global KeepRunning
+    KeepRunning = False
     rstv = ActualFile ( "Restart.py" )
     os   . system ( "start python " + rstv )
     self . hide ( )
     qApp . quit ( )
 
   def Quit ( self ) :
+    global KeepRunning
+    KeepRunning = False
     self . hide ( )
     qApp . quit ( )
 
@@ -335,15 +436,14 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
   def qtCreator ( self ) :
     RunSystem ( "D:/Qt/Tools/QtCreator/bin/qtcreator.exe" )
 
-
-def main():
-  app = QApplication(sys.argv)
-
-  w = QWidget()
-  trayIcon = SystemTrayIcon(QIcon(ActualFile("images/64x64/Menu.png")), w)
-
-  trayIcon.show()
-  sys.exit(app.exec_())
+def main ( ) :
+  global SysMenu
+  app       = QApplication(sys.argv)
+  threading . Thread         ( target = SpeechCommand ) . start (           )
+  w         = QWidget        (                                              )
+  SysMenu   = SystemTrayIcon ( QIcon(ActualFile("images/64x64/Menu.png")),w )
+  SysMenu   . show           (                                              )
+  sys       . exit           ( app . exec_ ( )                              )
 
 if __name__ == '__main__':
   main()

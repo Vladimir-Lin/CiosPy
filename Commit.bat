@@ -25,3 +25,4 @@ git commit -a -m "Commit Action ERP Web Site"
 git push
 
 echo "Completed Update"
+exit

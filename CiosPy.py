@@ -13,7 +13,8 @@ import mysql.connector
 from mysql.connector import Error
 import Actions
 import CIOS
-from   CIOS . Voice . Recognizer import Recognizer
+from   CIOS . Voice     . Recognizer import Recognizer
+import CIOS . Documents . JSON
 
 from PyQt5 import QtWidgets , QtGui , QtCore
 from PyQt5.QtWidgets import QApplication
@@ -30,6 +31,7 @@ SysMenu     = None
 KeepRunning = True
 TurnOn      = False
 Language    = "en-US"
+Settings    = { }
 
 def ActualFile ( filename ) :
   return os . path . dirname ( os . path . abspath (__file__) ) + "/" + filename
@@ -440,7 +442,7 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
 
 def main ( ) :
   global SysMenu
-  app       = QApplication(sys.argv)
+  app       = QApplication   ( sys . argv                                   )
   threading . Thread         ( target = SpeechCommand ) . start (           )
   w         = QWidget        (                                              )
   SysMenu   = SystemTrayIcon ( QIcon(ActualFile("images/64x64/Menu.png")),w )
@@ -448,4 +450,4 @@ def main ( ) :
   sys       . exit           ( app . exec_ ( )                              )
 
 if __name__ == '__main__':
-  main()
+  main ( )

@@ -370,7 +370,7 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
 
   def uploadPrograms ( self ) :
     RunSystem ( ActualFile ( "Commit.bat" ) )
-    Speech ( "上傳程式" )
+    Speech ( "開始上傳程式" )
 
   def Restart ( self ) :
     global KeepRunning

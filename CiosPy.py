@@ -9,29 +9,35 @@ import pyttsx3
 from   playsound import playsound
 import urllib
 import urllib.parse
+from   pathlib import Path
 import mysql.connector
 from mysql.connector import Error
 import Actions
 import CIOS
 from   CIOS . Voice     . Recognizer import Recognizer
-import CIOS . Documents . JSON
-
-from PyQt5 import QtWidgets , QtGui , QtCore
+from   CIOS . Voice     . Audio      import AudioPlayer
+from   CIOS . Documents . JSON       import Load  as LoadJSON
+from   CIOS . Documents . JSON       import Merge as MergeJSON
+from   CIOS . Documents . Commands   import CommandsMapper
+from PyQt5           import QtWidgets , QtGui , QtCore
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import qApp
 from PyQt5.QtWidgets import QSystemTrayIcon
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtWidgets import QAction
-from PyQt5.QtGui import QIcon
-from PyQt5.QtGui import QCursor
-from PyQt5.QtCore import QObject , pyqtSignal
+from PyQt5.QtGui     import QIcon
+from PyQt5.QtGui     import QCursor
+from PyQt5.QtCore    import QObject , pyqtSignal
 
 SysMenu     = None
 KeepRunning = True
 TurnOn      = False
 Language    = "en-US"
 Settings    = { }
+Player      = None
+HomePath    = ""
+Mapper      = None
 
 def ActualFile ( filename ) :
   return os . path . dirname ( os . path . abspath (__file__) ) + "/" + filename
@@ -440,14 +446,32 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
   def qtCreator ( self ) :
     RunSystem ( "D:/Qt/Tools/QtCreator/bin/qtcreator.exe" )
 
-def main ( ) :
-  global SysMenu
-  app       = QApplication   ( sys . argv                                   )
-  threading . Thread         ( target = SpeechCommand ) . start (           )
-  w         = QWidget        (                                              )
-  SysMenu   = SystemTrayIcon ( QIcon(ActualFile("images/64x64/Menu.png")),w )
-  SysMenu   . show           (                                              )
-  sys       . exit           ( app . exec_ ( )                              )
+def LoadOptions              (                                             ) :
+  global Player
+  global HomePath
+  global Player
+  HomePath  = str            ( Path . home ( )                               )
+  STX       = LoadJSON       ( f"{HomePath}/CIOS/settings.json"              )
+  PTX       = LoadJSON       ( f"{HomePath}/CIOS/user.json"                  )
+  Settings  = MergeJSON      ( STX , PTX                                     )
+  ATX       = LoadJSON       ( f"{HomePath}/CIOS/audios.json"                )
+  Player    = AudioPlayer    ( ATX                                           )
+  CTX       = LoadJSON       ( f"{HomePath}/CIOS/commands.json"              )
+  Mapper    = CommandsMapper ( CTX                                           )
+  print ( CTX )
+  return True
 
-if __name__ == '__main__':
-  main ( )
+def main                     (                                             ) :
+  global SysMenu
+  global Player
+  LoadOptions                (                                               )
+  app       = QApplication   ( sys . argv                                    )
+  threading . Thread         ( target = SpeechCommand ) . start (            )
+  w         = QWidget        (                                               )
+  SysMenu   = SystemTrayIcon ( QIcon(ActualFile("images/64x64/Menu.png")),w  )
+  SysMenu   . show           (                                               )
+  Player    . Notice         ( "Startup"                                     )
+  sys       . exit           ( app . exec_ ( )                               )
+
+if __name__ == '__main__' :
+  main                       (                                               )

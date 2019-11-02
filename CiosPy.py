@@ -5,6 +5,8 @@ import time
 import requests
 import threading
 import gettext
+import pyttsx3
+from   playsound import playsound
 import urllib
 import urllib.parse
 import mysql.connector

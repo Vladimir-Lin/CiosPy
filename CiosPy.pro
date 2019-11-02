@@ -11,6 +11,7 @@ SOURCES += $${PWD}/*.rb
 SOURCES += $${PWD}/*.rs
 SOURCES += $${PWD}/*.md
 
+include ($${PWD}/audios/audios.pri)
 include ($${PWD}/images/images.pri)
 include ($${PWD}/Libs/Libs.pri)
 include ($${PWD}/Templates/Templates.pri)

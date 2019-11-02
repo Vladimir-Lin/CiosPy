@@ -8,36 +8,43 @@ import gettext
 import pyttsx3
 from   playsound import playsound
 import urllib
-import urllib.parse
+import urllib . parse
 from   pathlib import Path
-import mysql.connector
-from mysql.connector import Error
+import win32com . client
+import mysql    . connector
+from   mysql    . connector import Error
 import Actions
 import CIOS
-from   CIOS . Voice     . Recognizer import Recognizer
-from   CIOS . Voice     . Audio      import AudioPlayer
-from   CIOS . Documents . JSON       import Load  as LoadJSON
-from   CIOS . Documents . JSON       import Merge as MergeJSON
-from   CIOS . Documents . Commands   import CommandsMapper
-from PyQt5           import QtWidgets , QtGui , QtCore
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import qApp
-from PyQt5.QtWidgets import QSystemTrayIcon
-from PyQt5.QtWidgets import QMenu
-from PyQt5.QtWidgets import QAction
-from PyQt5.QtGui     import QIcon
-from PyQt5.QtGui     import QCursor
-from PyQt5.QtCore    import QObject , pyqtSignal
+from   CIOS  . Voice     . Recognizer import Recognizer
+from   CIOS  . Voice     . Audio      import AudioPlayer
+from   CIOS  . Documents . JSON       import Load  as LoadJSON
+from   CIOS  . Documents . JSON       import Merge as MergeJSON
+from   CIOS  . Documents . Commands   import CommandsMapper
+from   PyQt5             import QtWidgets , QtGui , QtCore
+from   PyQt5 . QtWidgets import QApplication
+from   PyQt5 . QtWidgets import QWidget
+from   PyQt5 . QtWidgets import qApp
+from   PyQt5 . QtWidgets import QSystemTrayIcon
+from   PyQt5 . QtWidgets import QMenu
+from   PyQt5 . QtWidgets import QAction
+from   PyQt5 . QtWidgets import QTextEdit
+from   PyQt5 . QtWidgets import QPlainTextEdit
+from   PyQt5 . QtGui     import QIcon
+from   PyQt5 . QtGui     import QCursor
+from   PyQt5 . QtCore    import QObject , pyqtSignal
 
 SysMenu     = None
 KeepRunning = True
-TurnOn      = False
+TurnOn      = True
 Language    = "en-US"
 Settings    = { }
+UserConf    = { }
 Player      = None
 HomePath    = ""
 Mapper      = None
+VRTX        = None
+Speaker     = None
+VoiceInput  = None
 
 def ActualFile ( filename ) :
   return os . path . dirname ( os . path . abspath (__file__) ) + "/" + filename
@@ -45,83 +52,124 @@ def ActualFile ( filename ) :
 def RunSystem ( Program ) :
   os . system ( "start " + Program )
 
+def Speech ( words ) :
+  threading . Thread ( target = Speaker . Speak , args = ( words , ) ) . start ( )
+  return
+
+class ShowVoiceText ( QPlainTextEdit ) :
+
+  emitAppendText = pyqtSignal ( str )
+
+  def __init__ ( self ) :
+    super ( ) . __init__ ( )
+    self . setWindowTitle ( "語音輸入結果" )
+    self . emitAppendText . connect ( self . AppendTalk )
+
+  def closeEvent ( self , e ) :
+    global VoiceInput
+    VoiceInput = None
+    e          . accept ( )
+    return
+
+  def AppendTalk ( self , words ) :
+    self . appendPlainText ( words )
+
+  def Talk ( self , words ) :
+    self . emitAppendText . emit ( words )
+
+def OpenVoiceInput ( ) :
+  global VoiceInput
+  screen     = qApp   . primaryScreen     (                         )
+  rect       = screen . availableGeometry (                         )
+  size       = rect   . size              (                         )
+  rect       . setX                       ( rect . width  ( ) - 300 )
+  rect       . setY                       ( rect . height ( ) - 200 )
+  VoiceInput = ShowVoiceText              (                         )
+  VoiceInput . setGeometry                ( rect                    )
+  VoiceInput . show                       (                         )
+  # qApp       . exec_                      (                         )
+  return
+
+def CommandParser ( line ) :
+  global KeepRunning
+  global TurnOn
+  global Language
+  global Mapper
+  global SysMenu
+  global VoiceInput
+  global VRTX
+  if ( None != VoiceInput ) :
+    VoiceInput . Talk ( line )
+  line = line . strip ( )
+  line = line . lower ( )
+  if ( TurnOn ) :
+    ID = Mapper . Id ( line )
+    if ( ID < 0 ) :
+      L  = line
+      L  = L . split ( )
+      if ( len ( L ) > 0 ) and ( L [ 0 ] == "google" ) :
+        X = line . replace ( "google " , "" )
+        X = urllib . parse . quote_plus ( X )
+        X = f"https://www.google.com/search?q={X}"
+        RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ' + X )
+      else :
+        SysMenu . SendMessage ( "無效命令" , line )
+    else :
+      if ( 10002 == ID ) :
+        SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
+        TurnOn = False
+        Speech ( "語音命令已經關閉" )
+      elif ( 10101 == ID ) :
+        SysMenu . Restart ( )
+      elif ( 10201 == ID ) :
+        SysMenu . SendMessage ( "語音命令" , "改變語言為英文" )
+        Language = "en-US"
+        VRTX . Language = Language
+        Speech ( "Accept English Commands" )
+      elif ( 10202 == ID ) :
+        SysMenu . SendMessage ( "語音命令" , "改變語言為中文" )
+        Language = "zh-TW"
+        VRTX . Language = Language
+        Speech ( "接受中文命令" )
+      elif ( 10203 == ID ) :
+        SysMenu . SendMessage ( "語音命令" , "改變語言為日文" )
+        Language = "ja"
+        VRTX . Language = Language
+      elif ( 10301 == ID ) :
+        SysMenu . uploadPrograms ( )
+      elif ( 20001 == ID ) :
+        RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.google.com' )
+        Speech ( "已經為您打開Google" )
+      elif ( 20002 == ID ) :
+        RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.youtube.com' )
+        Speech ( "已經為您打開YouTube" )
+      elif ( 20003 == ID ) :
+        SysMenu . qtCreator ( )
+        Speech ( "已經為您打開Qt Creator" )
+      elif ( 20004 == ID ) :
+        SysMenu . SMPlayer ( )
+        Speech ( "已經為您打開SM Player" )
+      else :
+        SysMenu . SendMessage ( "無效命令" , line )
+  else :
+    ID = Mapper . Id ( line )
+    if ( 10001 == ID ) :
+      SysMenu . SendMessage ( "語音命令" , "開始接受命令" )
+      Speech ( "準備好接受命令" )
+      TurnOn = True
+  return True
+
 def SpeechCommand ( ) :
   global KeepRunning
   global TurnOn
   global Language
+  global Mapper
   global SysMenu
-  R = Recognizer ( )
-  R . OpenMicrophone ( Device = 1 )
-  while KeepRunning :
-    R . UseMicrophone ( )
-    line = R . Listen ( Language )
-    if ( len ( line ) > 0 ) :
-      line = line . strip ( )
-      line = line . lower ( )
-      if ( TurnOn ) :
-        L = line
-        L = L . split ( )
-        if ( len ( L ) > 0 ) and ( L [ 0 ] == "google" ) :
-          X = line . replace ( "google " , "" )
-          X = urllib . parse . quote_plus ( X )
-          X = f"https://www.google.com/search?q={X}"
-          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ' + X )
-        elif ( line == "computer refuse command" ) :
-          SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
-          TurnOn = False
-        elif ( line == "computer refused command" ) :
-          SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
-          TurnOn = False
-        elif ( line == "computer refuse comment" ) :
-          SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
-          TurnOn = False
-        elif ( line == "computer refused comment" ) :
-          SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
-          TurnOn = False
-        elif ( line == "打開youtube" ) :
-          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.youtube.com' )
-        elif ( line == "open youtube" ) :
-          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.youtube.com' )
-        elif ( line == "open up youtube" ) :
-          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.youtube.com' )
-        elif ( line == "open up google" ) :
-          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.google.com' )
-        elif ( line == "打開google" ) :
-          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.google.com' )
-        elif ( line == "open google" ) :
-          RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.google.com' )
-        elif ( line == "open up qt creator" ) :
-          RunSystem ( "D:/Qt/Tools/QtCreator/bin/qtcreator.exe" )
-        elif ( line == "open qt creator" ) :
-          RunSystem ( "D:/Qt/Tools/QtCreator/bin/qtcreator.exe" )
-        elif ( line == "computer restart yourself" ) :
-          SysMenu . Restart ( )
-        elif ( line == "電腦重新啟動" ) :
-          SysMenu . Restart ( )
-        elif ( line == "computer change language to chinese" ) :
-          SysMenu . SendMessage ( "語音命令" , "改變語言為中文" )
-          Language = "zh-TW"
-        elif ( line == "computer change language to japanese" ) :
-          SysMenu . SendMessage ( "語音命令" , "改變語言為日文" )
-          Language = "ja"
-        elif ( line == "改變語言為英文" ) :
-          SysMenu . SendMessage ( "語音命令" , "改變語言為英文" )
-          Language = "en-US"
-        elif ( line == "改變語言為日文" ) :
-          SysMenu . SendMessage ( "語音命令" , "改變語言為日文" )
-          Language = "ja"
-        else :
-          SysMenu . SendMessage ( "無效命令" , line )
-      else :
-        if ( line == "電腦接受命令" ) :
-          SysMenu . SendMessage ( "語音命令" , "開始接受命令" )
-          TurnOn = True
-        if ( line == "computer accept command" ) :
-          SysMenu . SendMessage ( "語音命令" , "開始接受命令" )
-          TurnOn = True
-        elif ( line == "computer accepted command" ) :
-          SysMenu . SendMessage ( "語音命令" , "開始接受命令" )
-          TurnOn = True
+  global VRTX
+  VRTX = Recognizer ( )
+  VRTX . OpenMicrophone ( Device = 1 )
+  VRTX . Parser = CommandParser
+  VRTX . Background ( Language )
   return True
 
 class SystemTrayIcon ( QSystemTrayIcon ) :
@@ -289,6 +337,12 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
     KiCadAction . triggered . connect ( self . KiCad )
     # Packages Menu
     menu          . addSeparator ( )
+    # upload programs
+    uploadProgramsAction = menu      . addAction("上傳程式")
+    uploadProgramsAction . triggered . connect ( self . uploadPrograms )
+    # Voice to Text
+    voiceTextAction = menu      . addAction("語音輸入結果")
+    voiceTextAction . triggered . connect ( self . voiceText )
     # Restart
     restartAction = menu      . addAction("重新啟動")
     restartAction . triggered . connect ( self . Restart )
@@ -309,8 +363,19 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
   def doShowMessage ( self , TITLE , MESSAGE ) :
     self . showMessage ( TITLE , MESSAGE )
 
+  def voiceText ( self ) :
+    global VoiceInput
+    if ( None == VoiceInput ) :
+      OpenVoiceInput ( )
+
+  def uploadPrograms ( self ) :
+    RunSystem ( ActualFile ( "Commit.bat" ) )
+    Speech ( "上傳程式" )
+
   def Restart ( self ) :
     global KeepRunning
+    global VRTX
+    VRTX . StopListening ( )
     KeepRunning = False
     rstv = ActualFile ( "Restart.py" )
     os   . system ( "start python " + rstv )
@@ -319,6 +384,8 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
 
   def Quit ( self ) :
     global KeepRunning
+    global VRTX
+    VRTX . StopListening ( )
     KeepRunning = False
     self . hide ( )
     qApp . quit ( )
@@ -450,28 +517,36 @@ def LoadOptions              (                                             ) :
   global Player
   global HomePath
   global Player
+  global Mapper
+  global Language
+  global Speaker
   HomePath  = str            ( Path . home ( )                               )
   STX       = LoadJSON       ( f"{HomePath}/CIOS/settings.json"              )
-  PTX       = LoadJSON       ( f"{HomePath}/CIOS/user.json"                  )
-  Settings  = MergeJSON      ( STX , PTX                                     )
+  UserConf  = LoadJSON       ( f"{HomePath}/CIOS/user.json"                  )
+  Settings  = MergeJSON      ( STX , UserConf                                )
   ATX       = LoadJSON       ( f"{HomePath}/CIOS/audios.json"                )
   Player    = AudioPlayer    ( ATX                                           )
   CTX       = LoadJSON       ( f"{HomePath}/CIOS/commands.json"              )
   Mapper    = CommandsMapper ( CTX                                           )
-  print ( CTX )
+  Language  = UserConf [ "Voice" ] [ "Language" ]
+  Speaker   = win32com  .client . Dispatch ( "SAPI.SpVoice" )
   return True
 
 def main                     (                                             ) :
   global SysMenu
   global Player
+  global KeepRunning
   LoadOptions                (                                               )
   app       = QApplication   ( sys . argv                                    )
   threading . Thread         ( target = SpeechCommand ) . start (            )
   w         = QWidget        (                                               )
   SysMenu   = SystemTrayIcon ( QIcon(ActualFile("images/64x64/Menu.png")),w  )
   SysMenu   . show           (                                               )
+  OpenVoiceInput             (                                               )
   Player    . Notice         ( "Startup"                                     )
-  sys       . exit           ( app . exec_ ( )                               )
+  while                      ( KeepRunning                                 ) :
+    app . exec_              (                                               )
+  # sys       . exit           ( app . exec_ ( )                               )
 
 if __name__ == '__main__' :
   main                       (                                               )

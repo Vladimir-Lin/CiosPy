@@ -113,26 +113,31 @@ def CommandParser ( line ) :
         X = f"https://www.google.com/search?q={X}"
         RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ' + X )
       else :
-        SysMenu . SendMessage ( "無效命令" , line )
+        if ( None == VoiceInput ) :
+          SysMenu . SendMessage ( "無效命令" , line )
     else :
       if ( 10002 == ID ) :
-        SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
+        if ( None == VoiceInput ) :
+          SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
         TurnOn = False
         Speech ( "語音命令已經關閉" )
       elif ( 10101 == ID ) :
         SysMenu . Restart ( )
       elif ( 10201 == ID ) :
-        SysMenu . SendMessage ( "語音命令" , "改變語言為英文" )
+        if ( None == VoiceInput ) :
+          SysMenu . SendMessage ( "語音命令" , "改變語言為英文" )
         Language = "en-US"
         VRTX . Language = Language
-        Speech ( "Accept English Commands" )
+        Speech ( "Accepted English Commands" )
       elif ( 10202 == ID ) :
-        SysMenu . SendMessage ( "語音命令" , "改變語言為中文" )
+        if ( None == VoiceInput ) :
+          SysMenu . SendMessage ( "語音命令" , "改變語言為中文" )
         Language = "zh-TW"
         VRTX . Language = Language
         Speech ( "接受中文命令" )
       elif ( 10203 == ID ) :
-        SysMenu . SendMessage ( "語音命令" , "改變語言為日文" )
+        if ( None == VoiceInput ) :
+          SysMenu . SendMessage ( "語音命令" , "改變語言為日文" )
         Language = "ja"
         VRTX . Language = Language
       elif ( 10301 == ID ) :
@@ -145,12 +150,15 @@ def CommandParser ( line ) :
         Speech ( "已經為您打開YouTube" )
       elif ( 20003 == ID ) :
         SysMenu . qtCreator ( )
-        Speech ( "已經為您打開Qt Creator" )
       elif ( 20004 == ID ) :
         SysMenu . SMPlayer ( )
-        Speech ( "已經為您打開SM Player" )
+      elif ( 20005 == ID ) :
+        SysMenu . Aegisub ( )
+      elif ( 20006 == ID ) :
+        SysMenu . Audacity ( )
       else :
-        SysMenu . SendMessage ( "無效命令" , line )
+        if ( None == VoiceInput ) :
+          SysMenu . SendMessage ( "無效命令" , line )
   else :
     ID = Mapper . Id ( line )
     if ( 10001 == ID ) :
@@ -392,18 +400,21 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
 
   def SMPlayer ( self ) :
     RunSystem ( "D:/Programs/SMPlayer/smplayer.exe" )
+    Speech ( "已經為您打開SM Player" )
 
   def Drax ( self ) :
     RunSystem ( "D:/Programs/Drax/Drax/start.bat" )
 
   def Aegisub ( self ) :
     RunSystem ( "D:/Programs/Aegisub/aegisub32.exe" )
+    Speech ( "已經為您啟動字幕編輯器" )
 
   def AvIDEmux ( self ) :
     RunSystem ( "D:/Programs/Avidemux/2.7/avidemux.exe" )
 
   def Audacity ( self ) :
     RunSystem ( "D:/Programs/Audacity/audacity.exe" )
+    Speech ( "已經為您啟動音訊編輯器" )
 
   def CamStudio ( self ) :
     RunSystem ( "D:/Programs/CamStudio/2.7/Recorder.exe" )
@@ -512,6 +523,7 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
 
   def qtCreator ( self ) :
     RunSystem ( "D:/Qt/Tools/QtCreator/bin/qtcreator.exe" )
+    Speech ( "已經為您打開Qt Creator" )
 
 def LoadOptions              (                                             ) :
   global Player

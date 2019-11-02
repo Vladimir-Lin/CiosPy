@@ -5,6 +5,7 @@ import time
 import requests
 import threading
 import gettext
+import json
 import pyttsx3
 from   playsound import playsound
 import urllib
@@ -90,6 +91,15 @@ def OpenVoiceInput ( ) :
   # qApp       . exec_                      (                         )
   return
 
+def OpenMachineProfiler ( machineName ) :
+  SERVER   = f"http://192.168.0.98:16319/CPU"
+  Headers  = { "Username" : "foxman" , "Password" : "la0marina" }
+  Jsox     = { "Machine" : machineName }
+  DSOX     = json . dumps ( Jsox )
+  r        = requests . post ( SERVER , data = DSOX , headers = Headers )
+  Speech ( f"開啟{machineName}機器效能監視" )
+  return
+
 def CommandParser ( line ) :
   global KeepRunning
   global TurnOn
@@ -142,6 +152,12 @@ def CommandParser ( line ) :
         VRTX . Language = Language
       elif ( 10301 == ID ) :
         SysMenu . uploadPrograms ( )
+      elif ( 10302 == ID ) :
+        SysMenu . uploadToICloud ( )
+      elif ( 10401 == ID ) :
+        OpenMachineProfiler ( "Cuisine" )
+      elif ( 10402 == ID ) :
+        OpenMachineProfiler ( "Beta" )
       elif ( 20001 == ID ) :
         RunSystem ( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://www.google.com' )
         Speech ( "已經為您打開Google" )
@@ -379,6 +395,10 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
   def uploadPrograms ( self ) :
     RunSystem ( ActualFile ( "Commit.bat" ) )
     Speech ( "開始上傳程式" )
+
+  def uploadToICloud ( self ) :
+    RunSystem ( ActualFile ( "iCloud.bat" ) )
+    Speech ( "更新程式到iCloud" )
 
   def Restart ( self ) :
     global KeepRunning

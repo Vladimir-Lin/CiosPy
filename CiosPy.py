@@ -144,6 +144,11 @@ def CommandParser ( line ) :
         if ( None != VoiceInput ) :
           for m in Mapper . Commands :
             VoiceInput . Talk ( m )
+      elif ( 10004 == ID ) :
+        HomePath = str ( Path . home ( ) )
+        CTX = LoadJSON ( f"{HomePath}/CIOS/commands.json" )
+        Mapper . Initialize ( CTX )
+        Speech ( "命令列表已經重新載入" )
       elif ( 10101 == ID ) :
         SysMenu . Restart ( )
       elif ( 10201 == ID ) :
@@ -185,6 +190,34 @@ def CommandParser ( line ) :
         SysMenu . Aegisub ( )
       elif ( 20006 == ID ) :
         SysMenu . Audacity ( )
+      elif ( 20007 == ID ) :
+        SysMenu . GIMP ( )
+      elif ( 30001 == ID ) :
+        URL = "https://www.youtube.com/watch?v=4ZVUmEUFwaY"
+        RunSystem ( f'"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" {URL}' )
+        Speech ( "已經為您打開三立新聞直播" )
+      elif ( 30002 == ID ) :
+        URL = "https://www.youtube.com/c/newsebc/live"
+        RunSystem ( f'"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" {URL}' )
+        Speech ( "已經為您打開東森新聞直播" )
+      elif ( 30003 == ID ) :
+        URL = "https://www.youtube.com/user/VOAchina"
+        RunSystem ( f'"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" {URL}' )
+        Speech ( "已經為您打開美國之音直播" )
+      elif ( 40001 == ID ) :
+        HomePath  = str ( Path . home ( ) )
+        CMDFILE   = f"{HomePath}/CIOS/commands.json"
+        EXEFILE   = Settings [ "Applications" ] [ "Notepad" ]
+        RunSystem ( f'{EXEFILE} {CMDFILE}' )
+        Speech ( "已經為您打開語音命令列表編輯器" )
+      elif ( 40002 == ID ) :
+        HomePath  = str ( Path . home ( ) )
+        EXEFILE   = Settings [ "Applications" ] [ "Notepad" ]
+        CMDFILE   = f"{HomePath}/CIOS/user.json"
+        RunSystem ( f'{EXEFILE} {CMDFILE}' )
+        CMDFILE   = f"{HomePath}/CIOS/settings.json"
+        RunSystem ( f'{EXEFILE} {CMDFILE}' )
+        Speech ( "已經為您打開設定檔" )
       else :
         if ( None == VoiceInput ) :
           SysMenu . SendMessage ( "無效命令" , line )
@@ -205,8 +238,13 @@ def SpeechCommand ( ) :
   global Mapper
   global SysMenu
   global VRTX
+  global Settings
   VRTX = Recognizer ( )
-  VRTX . OpenMicrophone ( Device = 1 )
+  VRTX . Languages = Settings [ "Voice" ] [ "Languages" ]
+  if ( "Microphone" in Settings ) :
+    VRTX . OpenMicrophone ( Device = Settings [ "Microphone" ] )
+  else :
+    VRTX . OpenMicrophone ( )
   VRTX . Parser  = CommandParser
   VRTX . Error   = CommandError
   VRTX . Reading = SysMenu . MicrophoneReading
@@ -526,6 +564,7 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
 
   def GIMP ( self ) :
     RunSystem ( "D:/Programs/GIMP/2/bin/gimp-2.10.exe" )
+    Speech ( "已經為您啟動GIMP" )
 
   def Inkscape ( self ) :
     RunSystem ( "D:/Programs/Inkscape/inkscape.exe" )
@@ -580,6 +619,7 @@ def LoadOptions              (                                             ) :
   global Mapper
   global Language
   global Speaker
+  global Settings
   HomePath  = str            ( Path . home ( )                               )
   STX       = LoadJSON       ( f"{HomePath}/CIOS/settings.json"              )
   UserConf  = LoadJSON       ( f"{HomePath}/CIOS/user.json"                  )

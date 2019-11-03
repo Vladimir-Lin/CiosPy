@@ -132,14 +132,18 @@ def CommandParser ( line ) :
         if ( None == VoiceInput ) :
           SysMenu . SendMessage ( "無效命令" , line )
     else :
-      if ( 10001 == ID ) :
+      if   ( 10001 == ID ) :
         Speech ( "已經準備好接受命令" )
         TurnOn = True
-      if ( 10002 == ID ) :
+      elif ( 10002 == ID ) :
         if ( None == VoiceInput ) :
           SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
         TurnOn = False
         Speech ( "語音命令已經關閉" )
+      elif ( 10003 == ID ) :
+        if ( None != VoiceInput ) :
+          for m in Mapper . Commands :
+            VoiceInput . Talk ( m )
       elif ( 10101 == ID ) :
         SysMenu . Restart ( )
       elif ( 10201 == ID ) :

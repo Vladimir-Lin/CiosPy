@@ -100,6 +100,13 @@ def OpenMachineProfiler ( machineName ) :
   Speech ( f"開啟{machineName}機器效能監視" )
   return
 
+def CommandError ( line ) :
+  global VoiceInput
+  if ( None == VoiceInput ) :
+    return False
+  VoiceInput . Talk ( line )
+  return True
+
 def CommandParser ( line ) :
   global KeepRunning
   global TurnOn
@@ -110,7 +117,6 @@ def CommandParser ( line ) :
   global VRTX
   if ( None != VoiceInput ) :
     VoiceInput . Talk ( line )
-  line = line . strip ( )
   line = line . lower ( )
   if ( TurnOn ) :
     ID = Mapper . Id ( line )
@@ -126,6 +132,9 @@ def CommandParser ( line ) :
         if ( None == VoiceInput ) :
           SysMenu . SendMessage ( "無效命令" , line )
     else :
+      if ( 10001 == ID ) :
+        Speech ( "已經準備好接受命令" )
+        TurnOn = True
       if ( 10002 == ID ) :
         if ( None == VoiceInput ) :
           SysMenu . SendMessage ( "語音命令" , "關閉語音命令" )
@@ -177,8 +186,10 @@ def CommandParser ( line ) :
           SysMenu . SendMessage ( "無效命令" , line )
   else :
     ID = Mapper . Id ( line )
+    print ( ID )
     if ( 10001 == ID ) :
-      SysMenu . SendMessage ( "語音命令" , "開始接受命令" )
+      if ( None == VoiceInput ) :
+        SysMenu . SendMessage ( "語音命令" , "開始接受命令" )
       Speech ( "準備好接受命令" )
       TurnOn = True
   return True
@@ -192,19 +203,23 @@ def SpeechCommand ( ) :
   global VRTX
   VRTX = Recognizer ( )
   VRTX . OpenMicrophone ( Device = 1 )
-  VRTX . Parser = CommandParser
+  VRTX . Parser  = CommandParser
+  VRTX . Error   = CommandError
+  VRTX . Reading = SysMenu . MicrophoneReading
   VRTX . Background ( Language )
   return True
 
 class SystemTrayIcon ( QSystemTrayIcon ) :
 
   emitShowMessage = pyqtSignal ( str , str )
+  emitSetIcon     = pyqtSignal ( str )
 
   def __init__(self, icon, parent=None):
     QSystemTrayIcon . __init__ ( self , icon , parent )
     self . setToolTip ( "CIOS系統選單" )
     self . activated . connect ( self . onTrayActivated )
     self . emitShowMessage . connect ( self . doShowMessage )
+    self . emitSetIcon     . connect ( self . doSetIcon     )
     # Configure Menu
     menu          = QMenu ( parent )
     # CIOS Packages
@@ -386,6 +401,15 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
 
   def doShowMessage ( self , TITLE , MESSAGE ) :
     self . showMessage ( TITLE , MESSAGE )
+
+  def doSetIcon ( self , iconfile ) :
+    self . setIcon ( QIcon ( iconfile ) )
+
+  def MicrophoneReading ( self , reading ) :
+    if ( reading ) :
+      self . emitSetIcon . emit ( ActualFile("images/64x64/ReadingMenu.png") )
+    else :
+      self . emitSetIcon . emit ( ActualFile("images/64x64/Menu.png") )
 
   def voiceText ( self ) :
     global VoiceInput

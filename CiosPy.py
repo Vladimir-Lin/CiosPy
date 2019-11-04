@@ -22,6 +22,9 @@ from   CIOS  . Documents . JSON       import Load  as LoadJSON
 from   CIOS  . Documents . JSON       import Merge as MergeJSON
 from   CIOS  . Documents . Commands   import CommandsMapper
 from   PyQt5             import QtWidgets , QtGui , QtCore
+from   PyQt5 . QtCore    import QObject , pyqtSignal
+from   PyQt5 . QtGui     import QIcon
+from   PyQt5 . QtGui     import QCursor
 from   PyQt5 . QtWidgets import QApplication
 from   PyQt5 . QtWidgets import QWidget
 from   PyQt5 . QtWidgets import qApp
@@ -30,9 +33,6 @@ from   PyQt5 . QtWidgets import QMenu
 from   PyQt5 . QtWidgets import QAction
 from   PyQt5 . QtWidgets import QTextEdit
 from   PyQt5 . QtWidgets import QPlainTextEdit
-from   PyQt5 . QtGui     import QIcon
-from   PyQt5 . QtGui     import QCursor
-from   PyQt5 . QtCore    import QObject , pyqtSignal
 
 SysMenu     = None
 KeepRunning = True
@@ -254,14 +254,14 @@ def SpeechCommand ( ) :
 class SystemTrayIcon ( QSystemTrayIcon ) :
 
   emitShowMessage = pyqtSignal ( str , str )
-  emitSetIcon     = pyqtSignal ( str )
+  emitSetIcon     = pyqtSignal ( str       )
 
   def __init__(self, icon, parent=None):
     QSystemTrayIcon . __init__ ( self , icon , parent )
     self . setToolTip ( "CIOS系統選單" )
-    self . activated . connect ( self . onTrayActivated )
-    self . emitShowMessage . connect ( self . doShowMessage )
-    self . emitSetIcon     . connect ( self . doSetIcon     )
+    self . activated       . connect ( self . onTrayActivated )
+    self . emitShowMessage . connect ( self . doShowMessage   )
+    self . emitSetIcon     . connect ( self . doSetIcon       )
     # Configure Menu
     menu          = QMenu ( parent )
     # CIOS Packages

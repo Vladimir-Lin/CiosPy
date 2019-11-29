@@ -18,6 +18,9 @@ git pull https://github.com/Vladimir-Lin/CiosPy
 cd C:\Users\Foxman\iCloudDrive\CIOS\Python\PyCpuProfiler
 git pull https://github.com/Vladimir-Lin/PyCpuProfiler
 
+cd C:\Users\Foxman\iCloudDrive\CIOS\Libraries\Data\UUIDs
+git pull https://github.com/Vladimir-Lin/UUIDs
+
 cd C:\Users\Foxman\iCloudDrive\CIOS\Libraries\Data\CiosTime
 git pull https://github.com/Vladimir-Lin/CiosTime
 

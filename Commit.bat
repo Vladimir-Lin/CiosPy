@@ -24,6 +24,10 @@ cd D:\Programs\PyCpuProfiler
 git commit -a -m "Commit Action ERP Web Site"
 git push
 
+cd D:\CIOS\Libraries\Data\UUIDs
+git commit -a -m "Commit UUIDs"
+git push
+
 cd D:\CIOS\Libraries\Data\CiosTime
 git commit -a -m "Commit CIOS Time"
 git push

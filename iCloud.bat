@@ -21,5 +21,8 @@ git pull https://github.com/Vladimir-Lin/PyCpuProfiler
 cd C:\Users\Foxman\iCloudDrive\CIOS\Libraries\Data\CiosTime
 git pull https://github.com/Vladimir-Lin/CiosTime
 
+cd C:\Users\Foxman\iCloudDrive\CIOS\Libraries\Tools\CiosParallel
+git pull https://github.com/Vladimir-Lin/CiosParallel
+
 echo "Completed Update"
 exit

@@ -28,5 +28,9 @@ cd D:\CIOS\Libraries\Data\CiosTime
 git commit -a -m "Commit CIOS Time"
 git push
 
+cd D:\CIOS\Libraries\Tools\CiosParallel
+git commit -a -m "Commit CIOS Parallel"
+git push
+
 echo "Completed Update"
 exit

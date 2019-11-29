@@ -24,5 +24,9 @@ cd D:\Programs\PyCpuProfiler
 git commit -a -m "Commit Action ERP Web Site"
 git push
 
+cd D:\CIOS\Libraries\Data\CiosTime
+git commit -a -m "Commit CIOS Time"
+git push
+
 echo "Completed Update"
 exit

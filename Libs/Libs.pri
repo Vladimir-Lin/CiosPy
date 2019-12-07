@@ -10,4 +10,5 @@ SOURCES += $${PWD}/*.rb
 SOURCES += $${PWD}/*.rs
 SOURCES += $${PWD}/*.bat
 
+include ($${PWD}/Physics/Physics.pri)
 include ($${PWD}/UI/UI.pri)

@@ -445,6 +445,7 @@ class NameListings ( QTreeWidget , VirtualGui ) :
       self . CurrentItem [ "Item"   ] = item
       self . CurrentItem [ "Column" ] = column
       self . CurrentItem [ "Widget" ] = cb
+      cb   . setMaxVisibleItems ( 15 )
       cb   . showPopup ( )
       ########################################################################
     elif ( 2 == column ) :

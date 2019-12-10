@@ -936,6 +936,7 @@ class NameListings ( QTreeWidget , VirtualGui ) :
     menu     . addSeparator ( )
     ##########################################################################
     languageMenu  = menu . addMenu ( "內定語言" )
+    languageMenu  . setFont ( self . font ( ) )
     KK  = self . Localities . keys ( )
     for x in KK :
       act = languageMenu . addAction ( self . Localities [ x ] )
@@ -945,6 +946,7 @@ class NameListings ( QTreeWidget , VirtualGui ) :
         act . setChecked ( True )
     ##########################################################################
     relevanceMenu = menu . addMenu ( "內定用途" )
+    relevanceMenu . setFont ( self . font ( ) )
     KK  = self . Relevance . keys ( )
     for x in KK :
       act = relevanceMenu . addAction ( self . Relevance [ x ] )

@@ -6,16 +6,20 @@ import requests
 import threading
 import gettext
 import json
+##############################################################################
 import pyttsx3
 from   playsound                      import playsound
 import urllib
 import urllib . parse
 from   pathlib                        import Path
 import win32com . client
+##############################################################################
 import mysql    . connector
 from   mysql    . connector           import Error
+##############################################################################
 import Actions
 from   Actions                        import *
+##############################################################################
 import CIOS
 from   CIOS  . SQL                    import SqlQuery
 from   CIOS  . SQL                    import SqlConnection
@@ -25,7 +29,7 @@ from   CIOS  . Voice     . Audio      import AudioPlayer
 from   CIOS  . Documents . JSON       import Load  as LoadJSON
 from   CIOS  . Documents . JSON       import Merge as MergeJSON
 from   CIOS  . Documents . Commands   import CommandsMapper
-from   CIOS  . Qt        . VirtualGui import VirtualGui
+##############################################################################
 from   PyQt5                          import QtWidgets , QtGui , QtCore
 from   PyQt5 . QtCore                 import QObject , pyqtSignal , Qt
 from   PyQt5 . QtCore                 import QPoint , QPointF
@@ -43,34 +47,34 @@ from   PyQt5 . QtWidgets              import QTreeWidget , QTreeWidgetItem
 from   PyQt5 . QtWidgets              import QLineEdit
 from   PyQt5 . QtWidgets              import QComboBox
 from   PyQt5 . QtWidgets              import QSpinBox
-
+##############################################################################
+from   CIOS  . Qt . VirtualGui        import VirtualGui
+from   CIOS  . Qt . MenuManager       import MenuManager
+from   CIOS  . Qt . TreeWidget        import TreeWidget
 ##############################################################################
 
-class NameListings ( QTreeWidget , VirtualGui ) :
+class UuidListings ( TreeWidget ) :
 
   ############################################################################
 
-  ColumnName      = 0
-  ColumnLanguage  = 1
-  ColumnRelevance = 2
-  ColumnPriority  = 3
-  ColumnFlags     = 4
-  ColumnId        = 5
-  ColumnEmpty     = 6
+  ColumnName        = 0
+  ColumnUsed        = 1
+  ColumnUuid        = 2
+  ColumnId          = 3
+  ColumnEmpty       = 4
 
   ############################################################################
 
-  emitRefresh       = pyqtSignal ( )
-  emitItemFlags     = pyqtSignal ( QTreeWidgetItem , str )
-  emitNewItem       = pyqtSignal ( str , str , str , str , str )
-  emitItemProerties = pyqtSignal ( QTreeWidgetItem , str , str , str )
+  emitRefresh       = pyqtSignal (                                           )
+  emitItemFlags     = pyqtSignal ( QTreeWidgetItem , str                     )
+  emitNewItem       = pyqtSignal ( str , str , str , str , str               )
+  emitItemProerties = pyqtSignal ( QTreeWidgetItem , str , str , str         )
 
   ############################################################################
 
   def __init__ ( self , parent = None ) :
     ##########################################################################
-    super ( QTreeWidget , self ) . __init__   ( parent )
-    super ( VirtualGui  , self ) . Initialize ( self   )
+    super ( TreeWidget , self ) . __init__   ( parent )
     ##########################################################################
     self . insertAction = QShortcut ( QKeySequence ( Qt.Key_Insert ) , self  )
     self . deleteAction = QShortcut ( QKeySequence ( Qt.Key_Delete ) , self  )
@@ -81,14 +85,18 @@ class NameListings ( QTreeWidget , VirtualGui ) :
     self . emitNewItem              . connect ( self . NewItem               )
     self . emitItemProerties        . connect ( self . UpdateItemProerties   )
     ##########################################################################
-    self . Uuid        = 0
     self . Database    = ""
     self . Table       = ""
-    self . RelevanceId = 0
+    self . Primary     = ""
+    self . Names       = ""
+    self . StartUuid   = 0
+    self . isUsed      = False
+    self . isFixed     = False
+    self . isActive    = False
+    self . isDeletable = False
     self . Player      = AudioPlayer ( )
     self . Localities  = { }
-    self . Relevance   = { }
-    self . Listings    = [ ]
+    self . Listings    = { }
     self . CurrentItem = { }
     self . Configure     ( )
     ##########################################################################
@@ -96,7 +104,7 @@ class NameListings ( QTreeWidget , VirtualGui ) :
   ############################################################################
 
   def Configure ( self ) :
-    Labels = [ "名稱" , "語言" , "用途" , "次序" , "狀態" , "編號" , "" ]
+    Labels = [ "項目名稱" , "使用狀態" , "長編號" , "位序編號" , "" ]
     fnt    = self . font                  (                              )
     fnt    . setPixelSize                 ( 20                           )
     self   . setFont                      ( fnt                          )
@@ -107,9 +115,10 @@ class NameListings ( QTreeWidget , VirtualGui ) :
     self   . setHorizontalScrollBarPolicy ( Qt   . ScrollBarAsNeeded     )
     self   . setVerticalScrollBarPolicy   ( Qt   . ScrollBarAsNeeded     )
     self   . setSelectionMode             ( self . SingleSelection       )
-    self   . setColumnCount               ( 7                            )
-    self   . setColumnHidden              ( 5    , True                  )
-    self   . setColumnWidth               ( 6    , 5                     )
+    self   . setColumnCount               ( 5                            )
+    for i in range ( 1 , 4 ) :
+      self . setColumnHidden              ( i    , True                  )
+    self   . setColumnWidth               ( 4    , 5                     )
     self   . setHeaderLabels              ( Labels                       )
     self   . itemDoubleClicked . connect  ( self . doubleClicked         )
     self   . itemClicked       . connect  ( self . singleClicked         )
@@ -154,32 +163,8 @@ class NameListings ( QTreeWidget , VirtualGui ) :
 
   ############################################################################
 
-  def focusInEvent ( self , event ) :
-    if ( self . focusIn ( event ) ) :
-      return
-    super ( QTreeWidget , self ) . focusInEvent ( event )
-    return
-
-  ############################################################################
-
-  def focusOutEvent ( self , event ) :
-    if ( self . focusOut ( event ) ) :
-      return
-    super ( QTreeWidget , self ) . focusOutEvent ( event )
-    return
-
-  ############################################################################
-
-  def contextMenuEvent ( self , event ) :
-    if ( self . Menu ( event . pos ( ) ) ) :
-      event . accept ( )
-    super ( QTreeWidget , self ) . contextMenuEvent ( event )
-    return
-
-  ############################################################################
-
-  def setUuid ( self , uuid ) :
-    self . Uuid = uuid
+  def setStartUuid ( self , startUuid ) :
+    self . StartUuid = startUuid
     return True
 
   ############################################################################
@@ -192,6 +177,42 @@ class NameListings ( QTreeWidget , VirtualGui ) :
 
   def setTable ( self , table ) :
     self . Table = table
+    return True
+
+  ############################################################################
+
+  def setPrimary ( self , primary ) :
+    self . Primary = primary
+    return True
+
+  ############################################################################
+
+  def setNames ( self , names ) :
+    self . Names = names
+    return True
+
+  ############################################################################
+
+  def setUsed ( self , used ) :
+    self . isUsed = used
+    return True
+
+  ############################################################################
+
+  def setFixed ( self , fixed ) :
+    self . isFixed = fixed
+    return True
+
+  ############################################################################
+
+  def setActive ( self , active ) :
+    self . isActive = active
+    return True
+
+  ############################################################################
+
+  def setDeletable ( self , delx ) :
+    self . isDeletable = delx
     return True
 
   ############################################################################
@@ -231,24 +252,6 @@ class NameListings ( QTreeWidget , VirtualGui ) :
 
   ############################################################################
 
-  def LoadRelevance  ( self , SC ) :
-    self  . Relevance  = { }
-    DBS    = self . Database
-    QQ     = f"select `id`,`uuid`,`name` from `{DBS}`.`relevance` where `used` = 1 order by `id` asc ;"
-    SC     . Query         ( QQ )
-    LISTs  = SC . FetchAll (    )
-    if ( not LISTs ) :
-      return False
-    for x in LISTs :
-      Id = x [ 0 ]
-      self . Relevance [ Id ] = x [ 2 ]
-      N    = self . TheName ( SC , "names_languages" , x [ 1 ] )
-      if ( len ( N ) > 0 ) :
-        self . Relevance [ Id ] = N
-    return True
-
-  ############################################################################
-
   def LoadLocalities ( self , SC ) :
     self . Localities = { }
     DBS   = self . Database
@@ -268,13 +271,39 @@ class NameListings ( QTreeWidget , VirtualGui ) :
   ############################################################################
 
   def LoadListings ( self , SC ) :
-    self  . Listings = [ ]
+    self  . Listings = {  }
     DBS   = self . Database
     TBS   = self . Table
-    UID   = self . Uuid
-    QQ    = f"select `id`,`locality`,`priority`,`relevance`,`flags`,`name` from `{DBS}`.`{TBS}` where ( `uuid` = {UID} ) order by `locality` asc , `relevance` asc , `priority` asc ;"
-    SC    . Query         ( QQ )
-    self  . Listings = SC . FetchAll ( )
+    Table = f"`{DBS}`.`{TBS}`"
+    UUIDs = [ ]
+    if ( self . isUsed ) :
+      if ( self . isActive ) :
+        QQ    = f"select `uuid` from {Table} where ( `used` > 0 ) order by `id` asc ;"
+        UUIDs = SC . ObtainUuids ( QQ )
+      else :
+        QQ    = f"select `uuid` from {Table} order by `id` asc ;"
+        UUIDs = SC . ObtainUuids ( QQ )
+    else :
+      QQ    = f"select `uuid` from {Table} order by `id` asc ;"
+      UUIDs = SC . ObtainUuids ( QQ )
+    for u in UUIDs :
+      Used = 1
+      Id   = -1
+      Name = self . TheName ( SC , self . Names , u )
+      if ( self . isUsed ) :
+        QQ = f"select `id`,`used` from {Table} where ( `uuid` = {u} ) ;"
+        SC       . Query         ( QQ )
+        USID     = SC . FetchOne (    )
+        if not ( ( not USID ) or ( USID == None  ) or ( USID is None ) ) :
+          Id   = USID [ 0 ]
+          Used = USID [ 1 ]
+      else :
+        QQ = f"select `id` from {Table} where ( `uuid` = {u} ) ;"
+        SC       . Query         ( QQ )
+        USID     = SC . FetchOne (    )
+        if not ( ( not USID ) or ( USID == None  ) or ( USID is None ) ) :
+          Id   = USID [ 0 ]
+      self  . Listings [ u ] = { "Id" : Id , "Used" : Used , "Name" : Name }
     return True
 
   ############################################################################
@@ -288,7 +317,6 @@ class NameListings ( QTreeWidget , VirtualGui ) :
     ##########################################################################
     SC   . Prepare            (        )
     ##########################################################################
-    self . LoadRelevance      ( SC     )
     self . LoadLocalities     ( SC     )
     self . LoadListings       ( SC     )
     ##########################################################################
@@ -299,26 +327,22 @@ class NameListings ( QTreeWidget , VirtualGui ) :
 
   ############################################################################
 
-  def AddNameItem ( self , Id , Locality , Relevance , Priority , Flags , Name ) :
+  def AddNameItem ( self , Uuid , Id , Used , Name ) :
     ##########################################################################
-    it   = QTreeWidgetItem  ( [                       str ( Name      )      ,
-                                self . Localities   [ int ( Locality  ) ]    ,
-                                self . Relevance    [ int ( Relevance ) ]    ,
-                                                      str ( Priority  )      ,
-                                             self . toHex ( Flags     )      ,
-                                                      str ( Id        )      ,
-                                                      ""                   ] )
+    it   = QTreeWidgetItem  ( [ str ( Name )                                 ,
+                                str ( Used )                                 ,
+                                str ( Uuid )                                 ,
+                                str ( Id   )                                 ,
+                                ""                                         ] )
     ##########################################################################
-    it   . setData          ( self . ColumnName      , Qt . UserRole , str ( Name      ) )
-    it   . setData          ( self . ColumnLanguage  , Qt . UserRole , int ( Locality  ) )
-    it   . setData          ( self . ColumnRelevance , Qt . UserRole , int ( Relevance ) )
-    it   . setData          ( self . ColumnPriority  , Qt . UserRole , int ( Priority  ) )
-    it   . setData          ( self . ColumnFlags     , Qt . UserRole , str ( Flags     ) )
-    it   . setData          ( self . ColumnId        , Qt . UserRole , str ( Id        ) )
+    it   . setData          ( self . ColumnName , Qt . UserRole , str ( Name ) )
+    it   . setData          ( self . ColumnUsed , Qt . UserRole , int ( Used ) )
+    it   . setData          ( self . ColumnUuid , Qt . UserRole , int ( Uuid ) )
+    it   . setData          ( self . ColumnId   , Qt . UserRole , int ( Id   ) )
     ##########################################################################
-    it   . setTextAlignment ( self . ColumnPriority , Qt . AlignRight        )
-    it   . setTextAlignment ( self . ColumnFlags    , Qt . AlignRight        )
-    it   . setTextAlignment ( self . ColumnId       , Qt . AlignRight        )
+    it   . setTextAlignment ( self . ColumnUsed , Qt . AlignRight            )
+    it   . setTextAlignment ( self . ColumnUuid , Qt . AlignRight            )
+    it   . setTextAlignment ( self . ColumnId   , Qt . AlignRight            )
     ##########################################################################
     self . addTopLevelItem  ( it                                             )
     ##########################################################################
@@ -342,17 +366,17 @@ class NameListings ( QTreeWidget , VirtualGui ) :
 
   def Refresh ( self )                                                       :
     ##########################################################################
-    for x in self  . Listings                                                :
+    KK = self . Listings . keys ( )
+    for u in KK                                                              :
       ########################################################################
+      V = self . Listings [ u ]
       self . AddNameItem                                                     (
-        str ( x [ 0 ] )                                                      ,
-        str ( x [ 1 ] )                                                      ,
-        str ( x [ 3 ] )                                                      ,
-        str ( x [ 2 ] )                                                      ,
-        str ( x [ 4 ] )                                                      ,
-        str ( x [ 5 ] )                                                      )
+        str ( u            )                                                 ,
+        str ( V [ "Id"   ] )                                                 ,
+        str ( V [ "Used" ] )                                                 ,
+        str ( V [ "Name" ] )                                                 )
     ##########################################################################
-    for v in range ( 0 , 6 ) :
+    for v in range ( 0 , 4 ) :
       self . resizeColumnToContents ( v )
     ##########################################################################
     return True
@@ -400,22 +424,6 @@ class NameListings ( QTreeWidget , VirtualGui ) :
 
   ############################################################################
 
-  def GetRelevanceLists ( self , Id ) :
-    cb  = QComboBox ( self )
-    KK  = self . Relevance . keys ( )
-    idx = 0
-    cnt = -1
-    for x in KK :
-      cb . addItem ( self . Relevance [ x ] , x )
-      if ( Id == x ) :
-        cnt = idx
-      idx = idx + 1
-    if ( cnt >= 0 ) :
-      cb . setCurrentIndex ( cnt )
-    return cb
-
-  ############################################################################
-
   def singleClicked ( self , item , column ) :
     self . Player . Play ( "D:/CIOS/Sounds/CIOS/click.mp3" )
     return True
@@ -450,14 +458,7 @@ class NameListings ( QTreeWidget , VirtualGui ) :
       ########################################################################
     elif ( 2 == column ) :
       ########################################################################
-      Id   = item . data              ( 2 , Qt . UserRole       )
-      cb   = self . GetRelevanceLists ( Id                      )
-      cb   . activated . connect      ( self . relevanceChanged )
-      self . setItemWidget ( item , column , cb )
-      self . CurrentItem [ "Item"   ] = item
-      self . CurrentItem [ "Column" ] = column
-      self . CurrentItem [ "Widget" ] = cb
-      cb   . showPopup ( )
+      pass
       ########################################################################
     elif ( 3 == column ) :
       ########################################################################
@@ -880,6 +881,8 @@ class NameListings ( QTreeWidget , VirtualGui ) :
   ############################################################################
 
   def DeleteItem ( self , item ) :
+    if ( not self . isDeletable ) :
+      return False
     Id = item . data ( 5 , Qt . UserRole )
     idx = self . indexOfTopLevelItem ( item )
     if ( idx >= 0 ) :
@@ -901,6 +904,7 @@ class NameListings ( QTreeWidget , VirtualGui ) :
 
   def Menu ( self , pos ) :
     id           = 0
+    hit          = self . headerItem ( )
     MenuMap      = { }
     item         = self    . itemAt ( pos )
     atPos        = QCursor . pos    (     )
@@ -914,13 +918,13 @@ class NameListings ( QTreeWidget , VirtualGui ) :
     appendAction = menu  . addAction ( "新增" )
     MenuMap [ appendAction ] = 1001
     ##########################################################################
-    if ( None == item ) :
-      pass
-    else :
-      deleteAction = menu  . addAction ( "刪除" )
-      MenuMap [ deleteAction ] = 1002
-      id = item . data ( 5 , Qt . UserRole )
-    idShown  = not self . isColumnHidden ( 5 )
+    if ( self . isDeletable ) :
+      if ( None == item ) :
+        pass
+      else :
+        deleteAction = menu  . addAction ( "刪除" )
+        MenuMap [ deleteAction ] = 1002
+        id = item . data ( 5 , Qt . UserRole )
     menu     . addSeparator ( )
     ##########################################################################
     idAction = menu . addAction ( "排序" )
@@ -928,29 +932,29 @@ class NameListings ( QTreeWidget , VirtualGui ) :
     idAction . setChecked   ( self . isSortingEnabled ( ) )
     MenuMap [ idAction ] = 1003
     ##########################################################################
-    idAction = menu . addAction ( "編號" )
-    idAction . setCheckable ( True )
-    idAction . setChecked   ( idShown )
-    MenuMap [ idAction ] = 1004
-    ##########################################################################
     menu     . addSeparator ( )
     ##########################################################################
+    columnMenu  = menu . addMenu ( "顯示欄位" )
+    columnMenu  . setFont ( self . font ( ) )
+    for x in range ( 1 , 4 ) :
+      if ( x == 1 ) :
+        if ( not self . isUsed ) :
+          continue
+      idShown  = not self . isColumnHidden ( x )
+      idName   = hit  . text ( x )
+      idAction = columnMenu . addAction ( idName )
+      idAction . setCheckable ( True )
+      idAction . setChecked   ( idShown )
+      MenuMap [ idAction ] = 2000000 + x
+    ##########################################################################
     languageMenu  = menu . addMenu ( "內定語言" )
+    languageMenu  . setFont ( self . font ( ) )
     KK  = self . Localities . keys ( )
     for x in KK :
       act = languageMenu . addAction ( self . Localities [ x ] )
       act . setCheckable ( True )
       MenuMap [ act ] = 1000000 + x
       if ( self . Locality == x ) :
-        act . setChecked ( True )
-    ##########################################################################
-    relevanceMenu = menu . addMenu ( "內定用途" )
-    KK  = self . Relevance . keys ( )
-    for x in KK :
-      act = relevanceMenu . addAction ( self . Relevance [ x ] )
-      act . setCheckable ( True )
-      MenuMap [ act ] = 2000000 + x
-      if ( self . RelevanceId == x ) :
         act . setChecked ( True )
     ##########################################################################
     self . Player . Play ( "D:/CIOS/Sounds/CIOS/open.mp3" )
@@ -972,16 +976,15 @@ class NameListings ( QTreeWidget , VirtualGui ) :
         self . setSortingEnabled ( True  )
       else :
         self . setSortingEnabled ( False )
-    elif ( 1004 == MenuId ) :
-      idShown = action . isChecked ( )
-      if ( idShown ) :
-        self . setColumnHidden ( 5 , False )
-      else :
-        self . setColumnHidden ( 5 , True  )
     elif ( MenuId > 1000000 ) and ( MenuId < 2000000 ) :
       self . Locality    = MenuId - 1000000
     elif ( MenuId > 2000000 ) and ( MenuId < 3000000 ) :
-      self . RelevanceId = MenuId - 2000000
+      idShown = action . isChecked ( )
+      idx     = MenuId - 2000000
+      if ( idShown ) :
+        self . setColumnHidden ( idx , False )
+      else :
+        self . setColumnHidden ( idx , True  )
     ##########################################################################
     return True
 
@@ -991,59 +994,91 @@ class NameListings ( QTreeWidget , VirtualGui ) :
 
 if __name__ == '__main__':
   ############################################################################
-  Uuid     = "0"
-  Width    = 960
-  Height   = 480
-  Locality = 1002
-  Title    = ""
-  Table    = ""
-  Database = "cios"
+  Width     = 480
+  Height    = 960
+  Locality  = 1002
+  StartUuid = 0
+  Title     = ""
+  Table     = ""
+  Primary   = ""
+  NameTable = ""
+  Database  = "cios"
+  Used      = False
+  Fixed     = False
+  Active    = False
+  Deletable = False
   ############################################################################
   argv = sys . argv [ 1: ]
   ############################################################################
   try                                                                        :
     opts, args = getopt . getopt                                             (
                    argv                                                      ,
-                   "u:w:h:l:d:c:t:"                                          ,
-                   [ "uuid="                                                 ,
-                     "width="                                                ,
+                   "afurw:h:s:l:d:c:p:n:t:"                                  ,
+                   [ "width="                                                ,
                      "height="                                               ,
+                     "start="                                                ,
                      "locality="                                             ,
+                     "active"                                                ,
+                     "fixed"                                                 ,
+                     "used"                                                  ,
+                     "remove"                                                ,
                      "database="                                             ,
                      "caption="                                              ,
-                     "title="                                              ] )
+                     "primary="                                              ,
+                     "name="                                                 ,
+                     "table="                                              ] )
   except getopt . GetoptError                                                :
     sys . exit ( 1 )
   ############################################################################
   for opt, arg in opts                                                       :
-    if   opt in ( "-u" , "--uuid"     )                                      :
-      Uuid     = arg
-    elif opt in ( "-w" , "--width"    )                                      :
-      Width    = int ( arg )
+    if   opt in ( "-w" , "--width"    )                                      :
+      Width     = int ( arg )
     elif opt in ( "-h" , "--height"   )                                      :
-      Height   = int ( arg )
+      Height    = int ( arg )
     elif opt in ( "-l" , "--locality" )                                      :
-      Locality = arg
+      Locality  = arg
+    elif opt in ( "-s" , "--start"    )                                      :
+      StartUuid = arg
     elif opt in ( "-d" , "--database" )                                      :
-      Database = arg
+      Database  = arg
     elif opt in ( "-c" , "--caption"  )                                      :
-      Title    = arg
+      Title     = arg
+    elif opt in ( "-a" , "--active"   )                                      :
+      Active    = True
+    elif opt in ( "-r" , "--remove"   )                                      :
+      Deletable = True
+    elif opt in ( "-u" , "--used"     )                                      :
+      Used      = True
+    elif opt in ( "-f" , "--fixed"    )                                      :
+      Fixed     = True
     elif opt in ( "-t" , "--table"    )                                      :
-      Table    = arg
+      Table     = arg
+    elif opt in ( "-p" , "--primary"  )                                      :
+      Primary   = arg
+    elif opt in ( "-n" , "--name"     )                                      :
+      NameTable = arg
   ############################################################################
-  if                      ( len ( Uuid  ) <  19                            ) :
+  if                      ( len ( Table     ) <=  0                        ) :
     sys  . exit           ( 0                                                )
-  if                      ( len ( Table ) <=  0                            ) :
+  if                      ( len ( Primary   ) <=  0                        ) :
+    sys  . exit           ( 0                                                )
+  if                      ( len ( NameTable ) <=  0                        ) :
     sys  . exit           ( 0                                                )
   ############################################################################
   app    = QApplication   ( sys . argv                                       )
-  w      = NameListings   (                                                  )
+  w      = UuidListings   (                                                  )
   w      . setWindowTitle ( Title                                            )
   w      . resize         ( Width , Height                                   )
   w      . show           (                                                  )
-  w      . setUuid        ( Uuid                                             )
+  w      . setStartUuid   ( StartUuid                                        )
   w      . setDatabase    ( Database                                         )
   w      . setTable       ( Table                                            )
+  w      . setPrimary     ( Primary                                          )
+  w      . setNames       ( NameTable                                        )
+  w      . setActive      ( Active                                           )
+  w      . setUsed        ( Used                                             )
+  w      . setFixed       ( Fixed                                            )
+  w      . setDeletable   ( Deletable                                        )
   w      . setLocality    ( Locality                                         )
   w      . startup        (                                                  )
   sys    . exit           ( app . exec_ ( )                                  )

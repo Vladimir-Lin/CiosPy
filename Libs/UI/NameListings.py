@@ -499,9 +499,14 @@ class NameListings ( QTreeWidget , VirtualGui ) :
     TBS   = self . Table
     UID   = self . Uuid
     Table = f"`{DBS}`.`{TBS}`"
-    QQ    = f"update {Table} set `name` = %s where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
     SC    . LockWrites      ( [ Table ]       )
+    ##########################################################################
+    QQ    = f"update {Table} set `name` = %s where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
     SC    . QueryValues     ( QQ , ( Name , ) )
+    ##########################################################################
+    QQ    = f"update {Table} set `length` = length(`name`) where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
+    SC    . Query           ( QQ )
+    ##########################################################################
     SC    . UnlockTables    (                 )
     ##########################################################################
     SC    . Close           (           )

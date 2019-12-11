@@ -65,10 +65,10 @@ class UuidListings ( TreeWidget ) :
 
   ############################################################################
 
-  emitRefresh       = pyqtSignal (                                           )
-  emitItemFlags     = pyqtSignal ( QTreeWidgetItem , str                     )
-  emitNewItem       = pyqtSignal ( str , str , str , str , str               )
-  emitItemProerties = pyqtSignal ( QTreeWidgetItem , str , str , str         )
+  emitRefresh   = pyqtSignal (                       )
+  emitItemFlags = pyqtSignal ( QTreeWidgetItem , str )
+  emitNewItem   = pyqtSignal ( str , str , str , str )
+  emitItemUsed  = pyqtSignal ( QTreeWidgetItem , str )
 
   ############################################################################
 
@@ -83,22 +83,26 @@ class UuidListings ( TreeWidget ) :
     self . emitRefresh              . connect ( self . Refresh               )
     self . emitItemFlags            . connect ( self . setItemFlags          )
     self . emitNewItem              . connect ( self . NewItem               )
-    self . emitItemProerties        . connect ( self . UpdateItemProerties   )
+    self . emitItemUsed             . connect ( self . UpdateItemUsed        )
     ##########################################################################
-    self . Database    = ""
-    self . Table       = ""
-    self . Primary     = ""
-    self . Names       = ""
-    self . StartUuid   = 0
-    self . isUsed      = False
-    self . isFixed     = False
-    self . isActive    = False
-    self . isDeletable = False
-    self . Player      = AudioPlayer ( )
-    self . Localities  = { }
-    self . Listings    = { }
-    self . CurrentItem = { }
-    self . Configure     ( )
+    self . Database     = ""
+    self . Table        = ""
+    self . Primary      = ""
+    self . Names        = ""
+    self . StartUuid    = 0
+    self . TypeId       = 0
+    self . StartId      = 0
+    self . PageSize     = 25
+    self . Items        = 0
+    self . isUsed       = False
+    self . isFixed      = False
+    self . isActive     = False
+    self . isDeletable  = False
+    self . Player       = AudioPlayer ( )
+    self . Localities   = { }
+    self . Listings     = { }
+    self . CurrentItem  = { }
+    self . Configure      ( )
     ##########################################################################
 
   ############################################################################
@@ -125,46 +129,14 @@ class UuidListings ( TreeWidget ) :
 
   ############################################################################
 
-  def toHex ( self , v ) :
-    HEX = {  0 : "0" ,  1 : "1" ,  2 : "2" ,  3 : "3"                        ,
-             4 : "4" ,  5 : "5" ,  6 : "6" ,  7 : "7"                        ,
-             8 : "8" ,  9 : "9" , 10 : "A" , 11 : "B"                        ,
-            12 : "C" , 13 : "D" , 14 : "E" , 15 : "F"                        }
-    SS  = ""
-    VV  = int ( v )
-    for i in range ( 0 , 16 ) :
-      DD = int ( VV % 16 )
-      VV = int ( VV / 16 )
-      WW = HEX [ DD      ]
-      SS = f"{WW}{SS}"
-    return SS
-
-  ############################################################################
-
-  def toInt ( self , h ) :
-    HEX = { "0" :  0 , "1" :  1 , "2" :  2 , "3" :  3 , "4" :  4             ,
-            "5" :  5 , "6" :  6 , "7" :  7 , "8" :  8 , "9" :  9             ,
-            "A" : 10 , "B" : 11 , "C" : 12 , "D" : 13 , "E" : 14 , "F" : 15  ,
-            "a" : 10 , "b" : 11 , "c" : 12 , "d" : 13 , "e" : 14 , "f" : 15  }
-    v   = 0
-    s   = list ( h )
-    if ( len ( s ) > 16 ) :
-      return { "Correct" : False }
-    for x in s :
-      if ( x in HEX ) :
-        k   = HEX [ x ]
-        v   = v * 16
-        v   = v + k
-      else :
-        return { "Correct" : False }
-    if ( v >= 9223372036854775808 ) :
-      return { "Correct" : False }
-    return { "Correct" : True , "Value" : v }
-
-  ############################################################################
-
   def setStartUuid ( self , startUuid ) :
     self . StartUuid = startUuid
+    return True
+
+  ############################################################################
+
+  def setTypeId ( self , typeId ) :
+    self . TypeId = typeId
     return True
 
   ############################################################################
@@ -235,11 +207,12 @@ class UuidListings ( TreeWidget ) :
   ############################################################################
 
   def TheName ( self , SC , Table , Uuid ) :
-    LCY   = self . Locality
-    DBS   = self . Database
-    QQ    = f"select `name` from `{DBS}`.`{Table}` where ( `uuid` = {Uuid} ) and ( `locality` = {LCY} ) and ( `relevance` = 0 ) order by `priority` asc limit 0,1 ;"
-    SC    . Query         ( QQ )
-    NAMEX = SC . FetchOne (    )
+    LCY    = self . Locality
+    DBS    = self . Database
+    NAMTAB = f"`{DBS}`.`{Table}`"
+    QQ     = f"select `name` from {NAMTAB} where ( `uuid` = {Uuid} ) and ( `locality` = {LCY} ) and ( `relevance` = 0 ) order by `priority` asc limit 0,1 ;"
+    SC     . Query         ( QQ )
+    NAMEX  = SC . FetchOne (    )
     if ( not NAMEX ) :
       return ""
     if ( NAMEX == None ) :
@@ -335,10 +308,10 @@ class UuidListings ( TreeWidget ) :
                                 str ( Id   )                                 ,
                                 ""                                         ] )
     ##########################################################################
-    it   . setData          ( self . ColumnName , Qt . UserRole , str ( Name ) )
-    it   . setData          ( self . ColumnUsed , Qt . UserRole , int ( Used ) )
-    it   . setData          ( self . ColumnUuid , Qt . UserRole , int ( Uuid ) )
-    it   . setData          ( self . ColumnId   , Qt . UserRole , int ( Id   ) )
+    it   . setData        ( self . ColumnName , Qt . UserRole , str ( Name ) )
+    it   . setData        ( self . ColumnUsed , Qt . UserRole , int ( Used ) )
+    it   . setData        ( self . ColumnUuid , Qt . UserRole , int ( Uuid ) )
+    it   . setData        ( self . ColumnId   , Qt . UserRole , int ( Id   ) )
     ##########################################################################
     it   . setTextAlignment ( self . ColumnUsed , Qt . AlignRight            )
     it   . setTextAlignment ( self . ColumnUuid , Qt . AlignRight            )
@@ -350,25 +323,10 @@ class UuidListings ( TreeWidget ) :
 
   ############################################################################
 
-  def UpdateItemProerties ( self , Item , Locality , Relevance , Priority ) :
-    ##########################################################################
-    Item . setText ( self . ColumnLanguage  ,  self . Localities [ int ( Locality  ) ] )
-    Item . setText ( self . ColumnRelevance ,  self . Relevance  [ int ( Relevance ) ] )
-    Item . setText ( self . ColumnPriority  ,                      str ( Priority  )   )
-    ##########################################################################
-    Item . setData ( self . ColumnLanguage  , Qt . UserRole , int ( Locality  ) )
-    Item . setData ( self . ColumnRelevance , Qt . UserRole , int ( Relevance ) )
-    Item . setData ( self . ColumnPriority  , Qt . UserRole , int ( Priority  ) )
-    ##########################################################################
-    return True
-
-  ############################################################################
-
   def Refresh ( self )                                                       :
     ##########################################################################
     KK = self . Listings . keys ( )
     for u in KK                                                              :
-      ########################################################################
       V = self . Listings [ u ]
       self . AddNameItem                                                     (
         str ( u            )                                                 ,
@@ -379,16 +337,6 @@ class UuidListings ( TreeWidget ) :
     for v in range ( 0 , 4 ) :
       self . resizeColumnToContents ( v )
     ##########################################################################
-    return True
-
-  ############################################################################
-
-  def FocusIn ( self ) :
-    return True
-
-  ############################################################################
-
-  def FocusOut ( self ) :
     return True
 
   ############################################################################
@@ -436,6 +384,8 @@ class UuidListings ( TreeWidget ) :
     ##########################################################################
     if   ( 0 == column ) :
       ########################################################################
+      # 項目名稱
+      ########################################################################
       le   = QLineEdit       ( self                   )
       le   . setText         ( item . text ( column ) )
       le   . editingFinished . connect ( self . nameChanged )
@@ -446,68 +396,71 @@ class UuidListings ( TreeWidget ) :
       ########################################################################
     elif ( 1 == column ) :
       ########################################################################
-      Id   = item . data             ( 1 , Qt . UserRole      )
-      cb   = self . GetLanguageLists ( Id                     )
-      cb   . activated . connect     ( self . languageChanged )
-      self . setItemWidget ( item , column , cb )
-      self . CurrentItem [ "Item"   ] = item
-      self . CurrentItem [ "Column" ] = column
-      self . CurrentItem [ "Widget" ] = cb
-      cb   . setMaxVisibleItems ( 15 )
-      cb   . showPopup ( )
+      # 使用狀態
       ########################################################################
-    elif ( 2 == column ) :
-      ########################################################################
-      pass
-      ########################################################################
-    elif ( 3 == column ) :
-      ########################################################################
-      val  = int ( item . data ( 3 , Qt . UserRole )  )
+      val  = int ( item . data ( column , Qt . UserRole ) )
       sb   = QSpinBox        ( self                   )
       sb   . setMinimum      ( 0                      )
       sb   . setAlignment    ( Qt . AlignRight        )
       sb   . setValue        ( val                    )
-      sb   . editingFinished . connect ( self . priorityChanged )
+      sb   . editingFinished . connect ( self . usedChanged )
       self . setItemWidget ( item , column , sb )
       self . CurrentItem [ "Item"   ] = item
       self . CurrentItem [ "Column" ] = column
       self . CurrentItem [ "Widget" ] = sb
       ########################################################################
-    elif ( 4 == column ) :
+    elif ( 2 == column ) :
       ########################################################################
-      le   = QLineEdit       ( self                   )
-      le   . setText         ( item . text ( column ) )
-      le   . editingFinished . connect ( self . flagsChanged )
-      self . setItemWidget ( item , column , le )
-      self . CurrentItem [ "Item"   ] = item
-      self . CurrentItem [ "Column" ] = column
-      self . CurrentItem [ "Widget" ] = le
+      # 長編號
+      ########################################################################
+      pass
+      ########################################################################
+    elif ( 3 == column ) :
+      ########################################################################
+      # 位序編號
+      ########################################################################
+      pass
       ########################################################################
     return True
 
   ############################################################################
 
-  def UpdateName ( self , Item , Column , Id , Name ) :
+  def UpdateName ( self , Item , Column , Name ) :
     ##########################################################################
-    SC = SqlConnection      (        )
-    SC . ConnectTo          ( CiosDB )
+    SC    = SqlConnection      (        )
+    SC    . ConnectTo          ( CiosDB )
     if not SC . isConnected (        ) :
       return False
     ##########################################################################
     SC    . Prepare         (        )
     ##########################################################################
     DBS   = self . Database
-    TBS   = self . Table
-    UID   = self . Uuid
+    TBS   = self . Names
+    LCID  = self . Locality
+    UID   = Item . data ( self . ColumnUuid , Qt . UserRole )
     Table = f"`{DBS}`.`{TBS}`"
-    QQ    = f"update {Table} set `name` = %s where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
     SC    . LockWrites      ( [ Table ]       )
-    SC    . QueryValues     ( QQ , ( Name , ) )
+    ##########################################################################
+    QQ    = f"select `id` from {Table} where ( `uuid` = {UID} ) and ( `locality` = {LCID} ) and ( `relevance` = 0 ) and ( `priority` = 0 ) order by `id` asc limit 0,1 ;"
+    SC    . Query ( QQ )
+    RC    = SC . FetchOne (    )
+    if ( ( not RC ) or ( RC == None  ) or ( RC is None ) ) :
+      QQ  = f"insert into {Table} ( `uuid`,`locality`,`priority`,`relevance`,`name` ) values ( %s , %s , %s , %s , %s ) ;"
+      SC  . QueryValues     ( QQ , ( UID , LCID , 0 , 0 , Name , ) )
+      QQ  = f"update {Table} set `length` = length(`name`) where ( `uuid` = {UID} ) and ( `locality` = {LCID} ) and ( `relevance` = 0 ) and ( `priority` = 0 ) ;"
+      SC  . Query ( QQ )
+    else :
+      Id  = RC [ 0 ]
+      QQ  = f"update {Table} set `name` = %s where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
+      SC  . QueryValues     ( QQ , ( Name , ) )
+      QQ  = f"update {Table} set `length` = length(`name`) where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
+      SC  . Query ( QQ )
+    ##########################################################################
     SC    . UnlockTables    (                 )
     ##########################################################################
     SC    . Close           (           )
     ##########################################################################
-    self . Player . Play ( "D:/CIOS/Sounds/CIOS/append.mp3" )
+    self  . Player . Play ( "D:/CIOS/Sounds/CIOS/append.mp3" )
     ##########################################################################
     return True
 
@@ -523,16 +476,18 @@ class UuidListings ( TreeWidget ) :
     widget = self   . CurrentItem [ "Widget" ]
     Name   = widget . text        (          )
     self   . removeParked         (          )
-    item   . setText              ( 0 , Name )
-    Id     = item . data          ( 5 , Qt . UserRole )
-    threading . Thread ( target = self . UpdateName , args = ( item , column , Id , Name , ) ) . start ( )
+    item   . setText              ( column , Name )
+    threading . Thread ( target = self . UpdateName , args = ( item , column , Name , ) ) . start ( )
     return True
 
   ############################################################################
 
-  def UpdateLanguage ( self , Item , Id , Language ) :
-    ##########################################################################
-    Relevance = Item . data  ( self . ColumnRelevance , Qt . UserRole )
+  def UpdateItemUsed ( self , Item , Used ) :
+    Item . setText ( self . ColumnUsed ,                 str ( Used ) )
+    Item . setData ( self . ColumnUsed , Qt . UserRole , int ( Used ) )
+    return
+
+  def UpdateUsed ( self , Item , Used ) :
     ##########################################################################
     SC = SqlConnection      (        )
     SC . ConnectTo          ( CiosDB )
@@ -543,169 +498,24 @@ class UuidListings ( TreeWidget ) :
     ##########################################################################
     DBS   = self . Database
     TBS   = self . Table
-    UID   = self . Uuid
+    UID   = Item . data ( self . ColumnUuid , Qt . UserRole )
     Table = f"`{DBS}`.`{TBS}`"
     SC    . LockWrites      ( [ Table ] )
     ##########################################################################
-    Priority = -1
-    QQ       = f"select `priority` from {Table} where ( `id` != {Id} ) and ( `uuid` = {UID} ) and ( `locality` = {Language} ) and ( `relevance` = {Relevance} ) order by `priority` desc limit 0,1 ;"
-    SC       . Query         ( QQ )
-    PRID     = SC . FetchOne (    )
-    if not ( ( not PRID ) or ( PRID == None  ) or ( PRID is None ) ) :
-      Priority = PRID [ 0 ]
-    Priority = Priority + 1
+    QQ    = f"update {Table} set `used` = {Used} where ( `uuid` = {UID} ) ;"
+    SC    . Query         ( QQ )
     ##########################################################################
-    QQ       = f"update {Table} set `locality` = {Language} , `priority` = {Priority} where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
-    SC       . Query         ( QQ )
+    SC    . UnlockTables  (    )
     ##########################################################################
-    SC       . UnlockTables  (    )
+    SC    . Close         (    )
     ##########################################################################
-    SC       . Close         (    )
+    self  . emitItemUsed . emit ( Item , str ( Used ) )
     ##########################################################################
-    self . emitItemProerties . emit                                          (
-      Item                                                                   ,
-      str ( Language  )                                                      ,
-      str ( Relevance )                                                      ,
-      str ( Priority  )                                                      )
-    ##########################################################################
-    self . Player . Play ( "D:/CIOS/Sounds/CIOS/append.mp3" )
+    self  . Player . Play ( "D:/CIOS/Sounds/CIOS/append.mp3" )
     ##########################################################################
     return True
 
-  def languageChanged ( self , Id ) :
-    if ( "Item"   not in self . CurrentItem ) :
-      return False
-    if ( "Column" not in self . CurrentItem ) :
-      return False
-    if ( "Widget" not in self . CurrentItem ) :
-      return False
-    item      = self   . CurrentItem [ "Item"   ]
-    column    = self   . CurrentItem [ "Column" ]
-    widget    = self   . CurrentItem [ "Widget" ]
-    Language  = widget . itemData ( widget . currentIndex ( ) )
-    self      . removeParked (          )
-    oldLang   = item . data  ( column , Qt . UserRole )
-    oldLang   = int          ( oldLang                )
-    if ( Language == oldLang ) :
-      return False
-    Id        = item . data          ( 5      , Qt . UserRole )
-    threading . Thread ( target = self . UpdateLanguage , args = ( item , Id , Language , ) ) . start ( )
-    return True
-
-  ############################################################################
-
-  def UpdateRelevance ( self , Item , Id , Relevance ) :
-    ##########################################################################
-    Language = Item . data  ( self . ColumnLanguage , Qt . UserRole )
-    ##########################################################################
-    SC = SqlConnection      (        )
-    SC . ConnectTo          ( CiosDB )
-    if not SC . isConnected (        ) :
-      return False
-    ##########################################################################
-    SC    . Prepare         (        )
-    ##########################################################################
-    DBS   = self . Database
-    TBS   = self . Table
-    UID   = self . Uuid
-    Table = f"`{DBS}`.`{TBS}`"
-    SC    . LockWrites      ( [ Table ] )
-    ##########################################################################
-    Priority = -1
-    QQ       = f"select `priority` from {Table} where ( `id` != {Id} ) and ( `uuid` = {UID} ) and ( `locality` = {Language} ) and ( `relevance` = {Relevance} ) order by `priority` desc limit 0,1 ;"
-    SC       . Query         ( QQ )
-    PRID     = SC . FetchOne (    )
-    if not ( ( not PRID ) or ( PRID == None  ) or ( PRID is None ) ) :
-      Priority = PRID [ 0 ]
-    Priority = Priority + 1
-    ##########################################################################
-    QQ       = f"update {Table} set `relevance` = {Relevance} , `priority` = {Priority} where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
-    SC       . Query         ( QQ )
-    ##########################################################################
-    SC       . UnlockTables  (    )
-    ##########################################################################
-    SC       . Close         (    )
-    ##########################################################################
-    self . emitItemProerties . emit                                          (
-      Item                                                                   ,
-      str ( Language  )                                                      ,
-      str ( Relevance )                                                      ,
-      str ( Priority  )                                                      )
-    ##########################################################################
-    self . Player . Play ( "D:/CIOS/Sounds/CIOS/append.mp3" )
-    ##########################################################################
-    return True
-
-  def relevanceChanged ( self , Id ) :
-    if ( "Item"   not in self . CurrentItem ) :
-      return False
-    if ( "Column" not in self . CurrentItem ) :
-      return False
-    if ( "Widget" not in self . CurrentItem ) :
-      return False
-    item      = self   . CurrentItem [ "Item"   ]
-    column    = self   . CurrentItem [ "Column" ]
-    widget    = self   . CurrentItem [ "Widget" ]
-    Relevance = widget . itemData ( widget . currentIndex ( ) )
-    self   . removeParked         (          )
-    oldRelev  = item . data  ( column , Qt . UserRole )
-    oldRelev  = int          ( oldRelev               )
-    if ( Relevance == oldRelev ) :
-      return False
-    Id     = item . data          ( 5 , Qt . UserRole )
-    threading . Thread ( target = self . UpdateRelevance , args = ( item , Id , Relevance , ) ) . start ( )
-    return True
-
-  ############################################################################
-
-  def UpdatePriority ( self , Item , Id , Priority ) :
-    ##########################################################################
-    Language  = Item . data  ( self . ColumnLanguage  , Qt . UserRole )
-    Relevance = Item . data  ( self . ColumnRelevance , Qt . UserRole )
-    ##########################################################################
-    SC = SqlConnection      (        )
-    SC . ConnectTo          ( CiosDB )
-    if not SC . isConnected (        ) :
-      return False
-    ##########################################################################
-    SC    . Prepare         (        )
-    ##########################################################################
-    DBS   = self . Database
-    TBS   = self . Table
-    UID   = self . Uuid
-    Table = f"`{DBS}`.`{TBS}`"
-    SC    . LockWrites      ( [ Table ] )
-    ##########################################################################
-    QQ       = f"select `id` from {Table} where ( `id` != {Id} ) and ( `uuid` = {UID} ) and ( `locality` = {Language} ) and ( `relevance` = {Relevance} ) and ( `priority` = {Priority} ) limit 0,1 ;"
-    SC       . Query         ( QQ )
-    PRID     = SC . FetchOne (    )
-    if not ( ( not PRID ) or ( PRID == None  ) or ( PRID is None ) ) :
-      Priority = -1
-      QQ       = f"select `priority` from {Table} where ( `id` != {Id} ) and ( `uuid` = {UID} ) and ( `locality` = {Language} ) and ( `relevance` = {Relevance} ) order by `priority` desc limit 0,1 ;"
-      SC       . Query         ( QQ )
-      PRID     = SC . FetchOne (    )
-      if not ( ( not PRID ) or ( PRID == None  ) or ( PRID is None ) ) :
-        Priority = PRID [ 0 ]
-      Priority = Priority + 1
-    ##########################################################################
-    QQ       = f"update {Table} set `priority` = {Priority} where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
-    SC       . Query         ( QQ )
-    ##########################################################################
-    SC       . UnlockTables  (    )
-    ##########################################################################
-    SC       . Close         (    )
-    ##########################################################################
-    self . emitItemProerties . emit                                          (
-      Item                                                                   ,
-      str ( Language  )                                                      ,
-      str ( Relevance )                                                      ,
-      str ( Priority  )                                                      )
-    ##########################################################################
-    self . Player . Play ( "D:/CIOS/Sounds/CIOS/append.mp3" )
-    ##########################################################################
-    return True
-
-  def priorityChanged ( self ) :
+  def usedChanged ( self ) :
     if ( "Item"   not in self . CurrentItem ) :
       return False
     if ( "Column" not in self . CurrentItem ) :
@@ -715,79 +525,24 @@ class UuidListings ( TreeWidget ) :
     item   = self   . CurrentItem [ "Item"   ]
     column = self   . CurrentItem [ "Column" ]
     widget = self   . CurrentItem [ "Widget" ]
-    Priority = widget . value     (          )
+    Used   = widget . value       (          )
     self   . removeParked         (          )
-    oldPriority = item . data  ( column , Qt . UserRole )
-    oldPriority = int          ( oldPriority            )
-    if ( Priority == oldPriority ) :
+    oldUsed = item . data  ( column , Qt . UserRole )
+    oldUsed = int          ( oldUsed                )
+    if ( Used == oldUsed ) :
       return False
-    Id     = item . data          ( 5 , Qt . UserRole )
-    threading . Thread ( target = self . UpdatePriority , args = ( item , Id , Priority , ) ) . start ( )
+    threading . Thread ( target = self . UpdateUsed , args = ( item , Used , ) ) . start ( )
     return True
 
   ############################################################################
 
-  def UpdateFlags ( self , Item , Column , Id , Flags ) :
-    ##########################################################################
-    SC = SqlConnection      (        )
-    SC . ConnectTo          ( CiosDB )
-    if not SC . isConnected (        ) :
-      return False
-    ##########################################################################
-    SC    . Prepare         (        )
-    ##########################################################################
-    DBS   = self . Database
-    TBS   = self . Table
-    UID   = self . Uuid
-    Table = f"`{DBS}`.`{TBS}`"
-    QQ    = f"update {Table} set `flags` = {Flags} where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
-    SC    . LockWrites      ( [ Table ] )
-    SC    . Query           ( QQ        )
-    SC    . UnlockTables    (           )
-    ##########################################################################
-    SC    . Close           (           )
-    ##########################################################################
-    HEX   = self . toHex    ( Flags                 )
-    self . emitItemFlags . emit ( Item , HEX )
-    ##########################################################################
-    self . Player . Play ( "D:/CIOS/Sounds/CIOS/append.mp3" )
-    ##########################################################################
-    return True
-
-  def flagsChanged ( self ) :
-    if ( "Item"   not in self . CurrentItem ) :
-      return False
-    if ( "Column" not in self . CurrentItem ) :
-      return False
-    if ( "Widget" not in self . CurrentItem ) :
-      return False
-    item      = self   . CurrentItem [ "Item"   ]
-    column    = self   . CurrentItem [ "Column" ]
-    widget    = self   . CurrentItem [ "Widget" ]
-    Flags     = widget . text        (          )
-    OldFlags  = item   . data        ( column , Qt . UserRole )
-    R         = self   . toInt       ( Flags    )
-    self      . removeParked         (          )
-    if ( not R [ "Correct" ] ) :
-      return False
-    V         = R [ "Value" ]
-    if ( V == OldFlags ) :
-      return False
-    Id        = item . data          ( 5 , Qt . UserRole )
-    threading . Thread ( target = self . UpdateFlags , args = ( item , column , Id , V , ) ) . start ( )
-    return True
-
-  ############################################################################
-
-  def NewItem ( self , Id , Locality , Relevance , Priority , Flags )        :
+  def NewItem ( self , Uuid , Id , Used , Name )                             :
     ##########################################################################
     it = self . AddNameItem                                                  (
-           str ( Id        )                                                 ,
-           str ( Locality  )                                                 ,
-           str ( Relevance )                                                 ,
-           str ( Priority  )                                                 ,
-           str ( Flags     )                                                 ,
-           ""                                                                )
+           str ( Uuid )                                                      ,
+           str ( Id   )                                                      ,
+           str ( Used )                                                      ,
+           str ( Name )                                                      )
     self . setCurrentItem ( it )
     ##########################################################################
     self . Player . Play ( "D:/CIOS/Sounds/CIOS/append.mp3" )
@@ -797,6 +552,8 @@ class UuidListings ( TreeWidget ) :
   ############################################################################
 
   def AppendItem ( self ) :
+    if ( self . isFixed ) :
+      return False
     ##########################################################################
     SC = SqlConnection       (        )
     SC . ConnectTo           ( CiosDB )
@@ -807,40 +564,42 @@ class UuidListings ( TreeWidget ) :
     ##########################################################################
     DBS      = self . Database
     TBS      = self . Table
-    UID      = self . Uuid
+    PBS      = self . Primary
+    UID      = self . StartUuid
+    TID      = self . TypeId
     LCID     = self . Locality
-    REVID    = self . RelevanceId
     Table    = f"`{DBS}`.`{TBS}`"
+    Primary  = f"`{DBS}`.`{PBS}`"
     ##########################################################################
     SC       . LockWrites    ( [ Table ] )
     ##########################################################################
-    Priority = -1
-    QQ       = f"select `priority` from {Table} where ( `uuid` = {UID} ) and ( `locality` = {LCID} ) and ( `relevance` = {REVID} ) order by `priority` desc limit 0,1 ;"
-    SC       . Query         ( QQ )
-    PRID     = SC . FetchOne (    )
-    if not ( ( not PRID ) or ( PRID == None  ) or ( PRID is None ) ) :
-      Priority = PRID [ 0 ]
-    Priority = Priority + 1
+    QQ      = f"select `uuid` from {Table} order by `uuid` desc limit 0,1 ;"
+    XC      = SC . FetchOne (    )
+    if not ( ( not XC ) or ( XC == None  ) or ( XC is None ) ) :
+      UID   = XC [ 0 ]
+    UID     = UID + 1
+    QQ      = f"insert into {Primary} ( `uuid`,`type`,`used` ) values ( {UID},{TID},1 ) ;" ;
+    SC      . Query         ( QQ )
+    QQ      = f"insert into {Table} ( `uuid` ) values ( {UID} ) ;" ;
+    SC      . Query         ( QQ )
     ##########################################################################
-    QQ       = f"insert into {Table} ( `uuid`,`locality`,`priority`,`relevance`,`name` ) values ( {UID} , {LCID} , {Priority} , {REVID} , '' ) ;"
+    QQ       = f"select `id`,`used` from {Table} where ( `uuid` = {UID} ) ;"
     SC       . Query         ( QQ )
+    RC       = SC . FetchOne (    )
     ##########################################################################
-    QQ    = f"select `id`,`locality`,`priority`,`relevance`,`flags` from {Table} where ( `uuid` = {UID} ) and ( `locality` = {LCID} ) and ( `relevance` = {REVID} ) and ( `priority` = {Priority} ) limit 0,1 ;"
-    SC    . Query         ( QQ )
-    RC    = SC . FetchOne (    )
+    Name     = self . TheName ( SC , self . Names , UID )
     ##########################################################################
     SC       . UnlockTables  (           )
     SC       . Close         (           )
     ##########################################################################
     if not ( ( not RC ) or ( RC == None  ) or ( RC is None ) ) :
       Id    = RC [ 0 ]
-      Flags = RC [ 4 ]
-    self . emitNewItem . emit                                                (
-      str ( Id       )                                                       ,
-      str ( LCID     )                                                       ,
-      str ( REVID    )                                                       ,
-      str ( Priority )                                                       ,
-      str ( Flags    )                                                       )
+      Used  = RC [ 1 ]
+      self . emitNewItem . emit                                              (
+        str ( UID  )                                                         ,
+        str ( Id   )                                                         ,
+        str ( Used )                                                         ,
+        str ( Name )                                                         )
     ##########################################################################
     return True
 
@@ -862,14 +621,14 @@ class UuidListings ( TreeWidget ) :
     SC    . Prepare         (        )
     ##########################################################################
     DBS   = self . Database
-    TBS   = self . Table
-    UID   = self . Uuid
-    Table = f"`{DBS}`.`{TBS}`"
+    # TBS   = self . Table
+    # UID   = self . Uuid
+    # Table = f"`{DBS}`.`{TBS}`"
     ##########################################################################
     SC    . LockWrites      ( [ Table ] )
     ##########################################################################
-    QQ    = f"delete from {Table} where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
-    SC    . Query           ( QQ        )
+    # QQ    = f"delete from {Table} where ( `id` = {Id} ) and ( `uuid` = {UID} ) ;"
+    # SC    . Query           ( QQ        )
     ##########################################################################
     SC    . UnlockTables    (           )
     SC    . Close           (           )
@@ -883,11 +642,11 @@ class UuidListings ( TreeWidget ) :
   def DeleteItem ( self , item ) :
     if ( not self . isDeletable ) :
       return False
-    Id = item . data ( 5 , Qt . UserRole )
-    idx = self . indexOfTopLevelItem ( item )
-    if ( idx >= 0 ) :
-      self . takeTopLevelItem ( idx )
-      threading . Thread ( target = self . RemoveItem , args = ( Id , ) ) . start ( )
+    # Id = item . data ( 5 , Qt . UserRole )
+    # idx = self . indexOfTopLevelItem ( item )
+    # if ( idx >= 0 ) :
+    #   self . takeTopLevelItem ( idx )
+    #   threading . Thread ( target = self . RemoveItem , args = ( Id , ) ) . start ( )
     return True
 
   ############################################################################
@@ -903,67 +662,64 @@ class UuidListings ( TreeWidget ) :
   ############################################################################
 
   def Menu ( self , pos ) :
+    ##########################################################################
+    MM           = MenuManager ( self )
+    ##########################################################################
     id           = 0
     hit          = self . headerItem ( )
     MenuMap      = { }
-    item         = self    . itemAt ( pos )
-    atPos        = QCursor . pos    (     )
-    menu         = QMenu ( self )
-    menu         . setFont ( self . font ( ) )
-    reloadAction = menu  . addAction ( "重新載入" )
-    MenuMap [ reloadAction ] = 1000
+    item         = self    . itemAt  ( pos )
+    atPos        = QCursor . pos     (     )
     ##########################################################################
-    menu     . addSeparator ( )
-    ##########################################################################
-    appendAction = menu  . addAction ( "新增" )
-    MenuMap [ appendAction ] = 1001
+    reloadAction = MM . addAction    ( 1000 , "重新載入" )
+    MM                . addSeparator ( )
+    CNT          = 0
+    if not ( self . isFixed ) :
+      appendAction = MM . addAction    ( 1001 , "新增" )
+      CNT        = CNT + 1
     ##########################################################################
     if ( self . isDeletable ) :
       if ( None == item ) :
         pass
       else :
-        deleteAction = menu  . addAction ( "刪除" )
-        MenuMap [ deleteAction ] = 1002
+        deleteAction = MM  . addAction ( 1002 , "刪除" )
         id = item . data ( 5 , Qt . UserRole )
-    menu     . addSeparator ( )
+        CNT        = CNT + 1
     ##########################################################################
-    idAction = menu . addAction ( "排序" )
-    idAction . setCheckable ( True )
-    idAction . setChecked   ( self . isSortingEnabled ( ) )
-    MenuMap [ idAction ] = 1003
+    if ( CNT > 0 ) :
+      MM . addSeparator ( )
     ##########################################################################
-    menu     . addSeparator ( )
+    idAction = MM . addAction ( 1003 , "排序" , True , self . isSortingEnabled ( ) )
+    MM . addSeparator ( )
     ##########################################################################
-    columnMenu  = menu . addMenu ( "顯示欄位" )
-    columnMenu  . setFont ( self . font ( ) )
-    for x in range ( 1 , 4 ) :
+    columnMenu = MM . addMenu ( "顯示欄位" )
+    for x in range ( 1 , 5 ) :
       if ( x == 1 ) :
         if ( not self . isUsed ) :
           continue
       idShown  = not self . isColumnHidden ( x )
       idName   = hit  . text ( x )
-      idAction = columnMenu . addAction ( idName )
-      idAction . setCheckable ( True )
-      idAction . setChecked   ( idShown )
-      MenuMap [ idAction ] = 2000000 + x
+      if ( len ( idName ) <= 0 ) :
+        idName = "結尾填白"
+      idAction = MM . addActionFromMenu ( columnMenu , 2000000 + x , idName , True , idShown )
     ##########################################################################
-    languageMenu  = menu . addMenu ( "內定語言" )
-    languageMenu  . setFont ( self . font ( ) )
+    languageMenu = MM . addMenu ( "內定語言" )
     KK  = self . Localities . keys ( )
     for x in KK :
-      act = languageMenu . addAction ( self . Localities [ x ] )
-      act . setCheckable ( True )
-      MenuMap [ act ] = 1000000 + x
+      idName    = self . Localities [ x ]
+      idShown   = False
       if ( self . Locality == x ) :
-        act . setChecked ( True )
+        idShown = True
+      act = MM . addActionFromMenu ( languageMenu , 1000000 + x , idName , True , idShown )
     ##########################################################################
-    self . Player . Play ( "D:/CIOS/Sounds/CIOS/open.mp3" )
-    action = menu . exec_ ( atPos )
+    self   . Player . Play ( "D:/CIOS/Sounds/CIOS/open.mp3" )
+    MM     . setFont    ( self . font ( ) )
+    action = MM . exec_ ( atPos           )
     ##########################################################################
     if ( None == action ) :
       return False
     ##########################################################################
-    MenuId = MenuMap [ action ]
+    MenuId = MM [ action ]
     if   ( 1000 == MenuId ) :
       self . startup ( )
     if   ( 1001 == MenuId ) :
@@ -978,13 +734,15 @@ class UuidListings ( TreeWidget ) :
         self . setSortingEnabled ( False )
     elif ( MenuId > 1000000 ) and ( MenuId < 2000000 ) :
       self . Locality    = MenuId - 1000000
+      self . startup ( )
     elif ( MenuId > 2000000 ) and ( MenuId < 3000000 ) :
       idShown = action . isChecked ( )
       idx     = MenuId - 2000000
       if ( idShown ) :
-        self . setColumnHidden ( idx , False )
+        self . setColumnHidden        ( idx , False )
+        self . resizeColumnToContents ( idx         )
       else :
-        self . setColumnHidden ( idx , True  )
+        self . setColumnHidden        ( idx , True  )
     ##########################################################################
     return True
 
@@ -998,6 +756,7 @@ if __name__ == '__main__':
   Height    = 960
   Locality  = 1002
   StartUuid = 0
+  typeId    = 0
   Title     = ""
   Table     = ""
   Primary   = ""
@@ -1013,10 +772,11 @@ if __name__ == '__main__':
   try                                                                        :
     opts, args = getopt . getopt                                             (
                    argv                                                      ,
-                   "afurw:h:s:l:d:c:p:n:t:"                                  ,
+                   "afurw:h:s:i:l:d:c:p:n:t:"                                ,
                    [ "width="                                                ,
                      "height="                                               ,
                      "start="                                                ,
+                     "typeid="                                               ,
                      "locality="                                             ,
                      "active"                                                ,
                      "fixed"                                                 ,
@@ -1039,6 +799,8 @@ if __name__ == '__main__':
       Locality  = arg
     elif opt in ( "-s" , "--start"    )                                      :
       StartUuid = arg
+    elif opt in ( "-s" , "--typeid"   )                                      :
+      typeId    = int ( arg )
     elif opt in ( "-d" , "--database" )                                      :
       Database  = arg
     elif opt in ( "-c" , "--caption"  )                                      :
@@ -1064,6 +826,8 @@ if __name__ == '__main__':
     sys  . exit           ( 0                                                )
   if                      ( len ( NameTable ) <=  0                        ) :
     sys  . exit           ( 0                                                )
+  if                      ( typeId            <=  0                        ) :
+    sys  . exit           ( 0                                                )
   ############################################################################
   app    = QApplication   ( sys . argv                                       )
   w      = UuidListings   (                                                  )
@@ -1071,6 +835,7 @@ if __name__ == '__main__':
   w      . resize         ( Width , Height                                   )
   w      . show           (                                                  )
   w      . setStartUuid   ( StartUuid                                        )
+  w      . setTypeId      ( typeId                                           )
   w      . setDatabase    ( Database                                         )
   w      . setTable       ( Table                                            )
   w      . setPrimary     ( Primary                                          )

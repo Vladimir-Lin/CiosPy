@@ -1018,7 +1018,7 @@ if __name__ == '__main__':
                      "locality="                                             ,
                      "database="                                             ,
                      "caption="                                              ,
-                     "title="                                              ] )
+                     "table="                                              ] )
   except getopt . GetoptError                                                :
     sys . exit ( 1 )
   ############################################################################

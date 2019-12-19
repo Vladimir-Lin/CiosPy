@@ -265,33 +265,36 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
     # Configure Menu
     menu          = QMenu ( parent )
     # CIOS Packages
-    qtMenu        = menu      . addMenu ( "Qt" )
-    taskMenu      = menu      . addMenu ( "任務管理系統" )
-    peopleMenu    = menu      . addMenu ( "人物管理系統" )
-    galleryMenu   = menu      . addMenu ( "圖庫管理系統" )
-    videoMenu     = menu      . addMenu ( "視訊管理系統" )
-    audioMenu     = menu      . addMenu ( "音訊管理系統" )
-    modelMenu     = menu      . addMenu ( "物體模型系統" )
-    scienceMenu   = menu      . addMenu ( "科學試算系統" )
-    databaseMenu  = menu      . addMenu ( "資料庫系統" )
-    depotMenu     = menu      . addMenu ( "軟體倉庫" )
+    qtMenu        = menu       . addMenu ( "Qt" )
+    taskMenu      = menu       . addMenu ( "任務管理系統" )
+    peopleMenu    = menu       . addMenu ( "人物管理系統" )
+    galleryMenu   = menu       . addMenu ( "圖庫管理系統" )
+    videoMenu     = menu       . addMenu ( "視訊管理系統" )
+    audioMenu     = menu       . addMenu ( "音訊管理系統" )
+    modelMenu     = menu       . addMenu ( "物體模型系統" )
+    scienceMenu   = menu       . addMenu ( "科學試算系統" )
+    databaseMenu  = menu       . addMenu ( "資料庫系統" )
+    depotMenu     = menu       . addMenu ( "軟體倉庫" )
     menu          . addSeparator ( )
     # Development System
-    devMenu       = menu      . addMenu ( "開發環境" )
-    eclipseMenu   = devMenu   . addMenu ( "Eclipse" )
-    mingwMenu     = devMenu   . addMenu ( "MinGW" )
+    devMenu       = menu       . addMenu ( "開發環境" )
+    eclipseMenu   = devMenu    . addMenu ( "Eclipse" )
+    mingwMenu     = devMenu    . addMenu ( "MinGW" )
     # SQL System
-    sqlMenu       = menu      . addMenu ( "資料庫系統" )
+    sqlMenu       = menu       . addMenu ( "資料庫系統" )
     # External Packages
-    pkgMenu        = menu     . addMenu ( "外部套件" )
-    mathExtraMenu  = pkgMenu  . addMenu ( "數學處理套件" )
-    imageExtraMenu = pkgMenu  . addMenu ( "影像處理套件" )
-    avExtraMenu    = pkgMenu  . addMenu ( "影音處理套件" )
-    m3dAction      = pkgMenu  . addMenu ( "物體模型系統" )
-    edaAction      = pkgMenu  . addMenu ( "電子電路設計" )
+    pkgMenu        = menu      . addMenu ( "外部套件" )
+    mathExtraMenu  = pkgMenu   . addMenu ( "數學處理套件" )
+    imageExtraMenu = pkgMenu   . addMenu ( "影像處理套件" )
+    avExtraMenu    = pkgMenu   . addMenu ( "影音處理套件" )
+    m3dAction      = pkgMenu   . addMenu ( "物體模型系統" )
+    edaAction      = pkgMenu   . addMenu ( "電子電路設計" )
     # Qt
-    creatorAction  = qtMenu . addAction ( "Qt Creator" )
+    creatorAction  = qtMenu    . addAction ( "Qt Creator" )
     creatorAction  . triggered . connect ( self . qtCreator )
+    # Tasks
+    taskAction     = taskMenu . addAction ( "行程任務管理系統" )
+    taskAction     . triggered . connect ( self . Tasks )
     # Eclipse
     # Java
     eclipseJavaAction = eclipseMenu . addAction ( "Java" )
@@ -483,6 +486,10 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
     KeepRunning = False
     self . hide ( )
     qApp . quit ( )
+
+  def Tasks ( self ) :
+    RunSystem ( "python " + ActualFile ( "Tasks/Tasks.py" ) )
+    Speech ( "已經為您打開行程任務管理系統" )
 
   def SMPlayer ( self ) :
     RunSystem ( "D:/Programs/SMPlayer/smplayer.exe" )

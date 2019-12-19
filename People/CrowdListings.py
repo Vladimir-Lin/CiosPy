@@ -37,6 +37,7 @@ from   PyQt5                          import QtCore
 from   PyQt5                          import QtGui
 from   PyQt5                          import QtWidgets
 ##############################################################################
+from   PyQt5 . QtCore                 import Qt
 from   PyQt5 . QtCore                 import QObject
 from   PyQt5 . QtCore                 import pyqtSignal
 ##############################################################################
@@ -79,24 +80,47 @@ class CrowdListings ( TreeWidget ) :
 
   ############################################################################
 
-  emitRefresh       = pyqtSignal ( )
-  emitItemFlags     = pyqtSignal ( QTreeWidgetItem , str )
-  emitNewItem       = pyqtSignal ( str , str , str , str , str )
-  emitItemProerties = pyqtSignal ( QTreeWidgetItem , str , str , str )
+#  emitRefresh       = pyqtSignal ( )
+#  emitItemFlags     = pyqtSignal ( QTreeWidgetItem , str )
+#  emitNewItem       = pyqtSignal ( str , str , str , str , str )
+#  emitItemProerties = pyqtSignal ( QTreeWidgetItem , str , str , str )
 
   ############################################################################
 
   def __init__ ( self , parent = None ) :
     ##########################################################################
-    super ( QTreeWidget , self ) . __init__   ( parent )
-    super ( VirtualGui  , self ) . Initialize ( self   )
+    super ( TreeWidget , self ) . __init__   ( parent )
     ##########################################################################
-
+#    self . insertAction = QShortcut ( QKeySequence ( Qt.Key_Insert ) , self  )
+#    self . deleteAction = QShortcut ( QKeySequence ( Qt.Key_Delete ) , self  )
+#    self . insertAction . activated . connect ( self . Insert                )
+#    self . deleteAction . activated . connect ( self . Delete                )
+    ##########################################################################
+    self . Configure      ( )
     ##########################################################################
 
   ############################################################################
 
   def Configure ( self ) :
+    Labels = [ "人物名稱" , "目前狀態" , "長編號" , "位序編號" , "" ]
+    fnt    = self . font                  (                              )
+    fnt    . setPixelSize                 ( 18                           )
+    self   . setFont                      ( fnt                          )
+    self   . setAttribute                 ( Qt   . WA_InputMethodEnabled )
+    self   . setDragDropMode              ( self . DragDrop              )
+    self   . setRootIsDecorated           ( False                        )
+    self   . setAlternatingRowColors      ( True                         )
+    self   . setHorizontalScrollBarPolicy ( Qt   . ScrollBarAsNeeded     )
+    self   . setVerticalScrollBarPolicy   ( Qt   . ScrollBarAsNeeded     )
+    self   . setSelectionMode             ( self . SingleSelection       )
+    self   . setColumnCount               ( 5                            )
+    for i in range ( 1 , 5 ) :
+      self . setColumnHidden              ( i    , True                  )
+    self   . setColumnWidth               ( 4    , 5                     )
+#    self   . setHeaderLabels              ( Labels                       )
+    self   . setCentralLabels             ( Labels                       )
+#    self   . itemDoubleClicked . connect  ( self . doubleClicked         )
+#    self   . itemClicked       . connect  ( self . singleClicked         )
     return
 
   ############################################################################

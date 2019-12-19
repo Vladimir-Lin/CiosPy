@@ -91,6 +91,13 @@ class PeopleWindow              ( MainWindow                               ) :
     ##########################################################################
     super                       ( ) . Configure (                            )
     ##########################################################################
+    fnt  = self . font          (                                            )
+    fnt  . setPixelSize         ( 16                                         )
+    ##########################################################################
+    self           . setFont    ( fnt                                        )
+    self . stacked . setFont    ( fnt                                        )
+    self . mdi     . setFont    ( fnt                                        )
+    ##########################################################################
     return
 
   def Quit                      ( self                                     ) :
@@ -111,7 +118,8 @@ class PeopleWindow              ( MainWindow                               ) :
 
   def CrowdListings             ( self                                     ) :
     cl   = CrowdListings        ( self . mdi )
-    self . mdi . addSubWindow   ( cl )
+    self . addMdi               ( cl )
+    cl   . setWindowTitle       ( "人物列表" )
     cl   . show ( )
     return
 
@@ -130,7 +138,6 @@ def LoadOptions              (                                             ) :
   TaskConf  = LoadJSON       ( f"{HomePath}/CIOS/tasks.json"                 )
   Settings  = MergeJSON      ( STX , TaskConf                                )
   Language  = Settings [ "Voice" ] [ "Language" ]
-  print ( Settings )
   return True
 
 def main                     (                                             ) :

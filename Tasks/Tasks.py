@@ -33,9 +33,27 @@ from   PyQt5 . QtWidgets import QMenu
 from   PyQt5 . QtWidgets import QAction
 from   PyQt5 . QtWidgets import QTextEdit
 from   PyQt5 . QtWidgets import QPlainTextEdit
+from   TasksMain         import Ui_TasksMain
+import TasksResources
+
+class TasksWindow            ( QtWidgets . QMainWindow ) :
+
+  def __init__               ( self , parent = None    ) :
+    super                    ( TasksWindow , self      ) . __init__ ( )
+    self . ui = Ui_TasksMain (                         )
+    self . ui . setupUi      ( self                    )
+    return
+
+  def Quit                   ( self                    ) :
+    self . hide              (                         )
+    qApp . quit              (                         )
+    return
 
 def main                     (                                             ) :
-  print ( "Tasks" )
+  app   = QApplication       ( sys . argv                                  )
+  tasks = TasksWindow        (                                             )
+  tasks . showMaximized      (                                             )
+  sys   . exit               ( app . exec_ ( )                             )
 
 if __name__ == '__main__' :
-  main                       (                                               )
+  main                       (                                             )

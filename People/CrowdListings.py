@@ -29,6 +29,9 @@ from   CIOS  . Voice     . Audio      import AudioPlayer
 from   CIOS  . Documents . JSON       import Load  as LoadJSON
 from   CIOS  . Documents . JSON       import Merge as MergeJSON
 from   CIOS  . Documents . Commands   import CommandsMapper
+from   CIOS  . Database               import Tables
+from   CIOS  . Database               import TablePlans
+from   CIOS  . Database               import Templates
 ##############################################################################
 from   PyQt5                          import QtCore
 from   PyQt5                          import QtGui
@@ -61,85 +64,100 @@ from   CIOS  . Qt . MenuManager       import MenuManager
 from   CIOS  . Qt . TreeWidget        import TreeWidget
 from   CIOS  . Qt . MainWindow        import MainWindow
 ##############################################################################
-from   PeopleMain        import Ui_PeopleMain
-import Resources
-from   CrowdListings     import CrowdListings
-##############################################################################
 
-SysMenu     = None
-KeepRunning = True
-TurnOn      = True
-Language    = "en-US"
-Settings    = { }
-UserConf    = { }
-HomePath    = ""
+class CrowdListings ( TreeWidget ) :
 
-##############################################################################
+  ############################################################################
 
-class PeopleWindow              ( MainWindow                               ) :
+  ColumnName      = 0
+  ColumnLanguage  = 1
+  ColumnRelevance = 2
+  ColumnPriority  = 3
+  ColumnFlags     = 4
+  ColumnId        = 5
+  ColumnEmpty     = 6
 
-  def __init__                  ( self , parent = None                     ) :
-    super                       ( MainWindow , self ) .  __init__ ( parent   )
+  ############################################################################
+
+  emitRefresh       = pyqtSignal ( )
+  emitItemFlags     = pyqtSignal ( QTreeWidgetItem , str )
+  emitNewItem       = pyqtSignal ( str , str , str , str , str )
+  emitItemProerties = pyqtSignal ( QTreeWidgetItem , str , str , str )
+
+  ############################################################################
+
+  def __init__ ( self , parent = None ) :
     ##########################################################################
-    self . ui = Ui_PeopleMain   (                                            )
-    self . ui . setupUi         ( self                                       )
-    self . Configure            (                                            )
+    super ( QTreeWidget , self ) . __init__   ( parent )
+    super ( VirtualGui  , self ) . Initialize ( self   )
     ##########################################################################
+
+    ##########################################################################
+
+  ############################################################################
+
+  def Configure ( self ) :
     return
 
-  def Configure                 ( self                                     ) :
-    ##########################################################################
-    super                       ( ) . Configure (                            )
-    ##########################################################################
+  ############################################################################
+
+  def focusInEvent ( self , event ) :
+    if ( self . focusIn ( event ) ) :
+      return
+    super ( QTreeWidget , self ) . focusInEvent ( event )
     return
 
-  def Quit                      ( self                                     ) :
-    self . hide                 (                                            )
-    qApp . quit                 (                                            )
+  ############################################################################
+
+  def focusOutEvent ( self , event ) :
+    if ( self . focusOut ( event ) ) :
+      return
+    super ( QTreeWidget , self ) . focusOutEvent ( event )
     return
+
+  ############################################################################
+
+  def contextMenuEvent ( self , event ) :
+    if ( self . Menu ( event . pos ( ) ) ) :
+      event . accept ( )
+    super ( QTreeWidget , self ) . contextMenuEvent ( event )
+    return
+
+  ############################################################################
 
   def startup ( self ) :
-    return
+    self . clear ( )
+    threading . Thread ( target = self . loading ) . start ( )
+    return True
 
-  def Meridians                 ( self                                     ) :
-    print ( "Meridians" )
-    return
+  ############################################################################
 
-  def Acupunctures              ( self                                     ) :
-    print ( "Acupunctures" )
-    return
+  def FocusIn ( self ) :
+    return True
 
-  def CrowdListings             ( self                                     ) :
-    cl   = CrowdListings        ( self . mdi )
-    self . mdi . addSubWindow   ( cl )
-    cl   . show ( )
-    return
+  ############################################################################
 
-  def CrowdViews                ( self                                     ) :
-    print ( "CrowdViews" )
-    return
+  def FocusOut ( self ) :
+    return True
 
-def LoadOptions              (                                             ) :
-  global HomePath
-  global Language
-  global Settings
-  HomePath  = str            ( Path . home ( )                               )
-  STX       = LoadJSON       ( f"{HomePath}/CIOS/settings.json"              )
-  UserConf  = LoadJSON       ( f"{HomePath}/CIOS/user.json"                  )
-  STX       = MergeJSON      ( STX , UserConf                                )
-  TaskConf  = LoadJSON       ( f"{HomePath}/CIOS/tasks.json"                 )
-  Settings  = MergeJSON      ( STX , TaskConf                                )
-  Language  = Settings [ "Voice" ] [ "Language" ]
-  print ( Settings )
-  return True
+  ############################################################################
 
-def main                     (                                             ) :
-  LoadOptions                (                                               )
-  app   = QApplication       ( sys . argv                                    )
-  tasks = PeopleWindow       (                                               )
-  tasks . showMaximized      (                                               )
-  tasks . startup            (                                               )
-  sys   . exit               ( app . exec_ ( )                               )
+  def singleClicked ( self , item , column ) :
+    return True
 
-if __name__ == '__main__' :
-  main                       (                                               )
+  ############################################################################
+
+  def doubleClicked ( self , item , column ) :
+    return True
+
+  ############################################################################
+
+  def Menu ( self , pos ) :
+    ##########################################################################
+
+    ##########################################################################
+    return True
+
+  ############################################################################
+
+##############################################################################

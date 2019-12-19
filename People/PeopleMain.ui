@@ -47,14 +47,54 @@
     <property name="title">
      <string>Windows</string>
     </property>
+    <widget class="QMenu" name="menuPages">
+     <property name="title">
+      <string>Pages</string>
+     </property>
+    </widget>
+    <widget class="QMenu" name="menuWindowLists">
+     <property name="title">
+      <string>Window listings</string>
+     </property>
+    </widget>
+    <addaction name="menuPages"/>
+    <addaction name="menuWindowLists"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
      <string>Tools</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuAnatomy">
+    <property name="title">
+     <string>Anatomy</string>
+    </property>
+    <widget class="QMenu" name="menuMeridians">
+     <property name="title">
+      <string>Meridians</string>
+     </property>
+     <addaction name="actionMeridian"/>
+     <addaction name="actionAcupunctures"/>
+    </widget>
+    <addaction name="menuMeridians"/>
+   </widget>
+   <widget class="QMenu" name="menuPeople">
+    <property name="title">
+     <string>People</string>
+    </property>
+    <widget class="QMenu" name="menuCrowds">
+     <property name="title">
+      <string>Crowds</string>
+     </property>
+     <addaction name="actionCrowdListings"/>
+     <addaction name="actionCrowdViews"/>
+    </widget>
+    <addaction name="menuCrowds"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuPeople"/>
+   <addaction name="menuAnatomy"/>
    <addaction name="menuTools"/>
    <addaction name="menuWindows"/>
    <addaction name="menuHelp"/>
@@ -81,6 +121,26 @@
     <string>Quit</string>
    </property>
   </action>
+  <action name="actionMeridian">
+   <property name="text">
+    <string>Meridians</string>
+   </property>
+  </action>
+  <action name="actionAcupunctures">
+   <property name="text">
+    <string>Acupunctures</string>
+   </property>
+  </action>
+  <action name="actionCrowdListings">
+   <property name="text">
+    <string>Listings</string>
+   </property>
+  </action>
+  <action name="actionCrowdViews">
+   <property name="text">
+    <string>Views</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="People.qrc"/>
@@ -99,6 +159,70 @@
     <hint type="destinationlabel">
      <x>409</x>
      <y>293</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionMeridian</sender>
+   <signal>triggered()</signal>
+   <receiver>PeopleMain</receiver>
+   <slot>Meridians()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionAcupunctures</sender>
+   <signal>triggered()</signal>
+   <receiver>PeopleMain</receiver>
+   <slot>Acupunctures()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCrowdListings</sender>
+   <signal>triggered()</signal>
+   <receiver>PeopleMain</receiver>
+   <slot>CrowdListings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCrowdViews</sender>
+   <signal>triggered()</signal>
+   <receiver>PeopleMain</receiver>
+   <slot>CrowdViews()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
     </hint>
    </hints>
   </connection>

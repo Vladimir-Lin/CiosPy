@@ -1,5 +1,6 @@
 import os
 import sys
+sys . path . append ( os . path . dirname ( os . path . abspath (__file__) ) + "/../Libs" )
 import getopt
 import time
 import requests
@@ -33,8 +34,18 @@ from   PyQt5 . QtWidgets import QMenu
 from   PyQt5 . QtWidgets import QAction
 from   PyQt5 . QtWidgets import QTextEdit
 from   PyQt5 . QtWidgets import QPlainTextEdit
+from   PyQt5 . QtWidgets import QMdiArea
+from   PyQt5 . QtWidgets import QStackedWidget
 from   TasksMain         import Ui_TasksMain
 import TasksResources
+
+SysMenu     = None
+KeepRunning = True
+TurnOn      = True
+Language    = "en-US"
+Settings    = { }
+UserConf    = { }
+HomePath    = ""
 
 class TasksWindow            ( QtWidgets . QMainWindow ) :
 
@@ -42,6 +53,14 @@ class TasksWindow            ( QtWidgets . QMainWindow ) :
     super                    ( TasksWindow , self      ) . __init__ ( )
     self . ui = Ui_TasksMain (                         )
     self . ui . setupUi      ( self                    )
+    self . Default           (                         )
+    return
+
+  def Default                       ( self                    ) :
+    self . stacked = QStackedWidget ( self                    )
+    self . mdi     = QMdiArea       ( self . stacked          )
+    self . stacked . addWidget      ( self . mdi              )
+    self . setCentralWidget         ( self . stacked          )
     return
 
   def Quit                   ( self                    ) :
@@ -49,11 +68,26 @@ class TasksWindow            ( QtWidgets . QMainWindow ) :
     qApp . quit              (                         )
     return
 
+def LoadOptions              (                                             ) :
+  global HomePath
+  global Language
+  global Settings
+  HomePath  = str            ( Path . home ( )                               )
+  STX       = LoadJSON       ( f"{HomePath}/CIOS/settings.json"              )
+  UserConf  = LoadJSON       ( f"{HomePath}/CIOS/user.json"                  )
+  STX       = MergeJSON      ( STX , UserConf                                )
+  TaskConf  = LoadJSON       ( f"{HomePath}/CIOS/tasks.json"                 )
+  Settings  = MergeJSON      ( STX , TaskConf                                )
+  Language  = Settings [ "Voice" ] [ "Language" ]
+  print ( Settings )
+  return True
+
 def main                     (                                             ) :
-  app   = QApplication       ( sys . argv                                  )
-  tasks = TasksWindow        (                                             )
-  tasks . showMaximized      (                                             )
-  sys   . exit               ( app . exec_ ( )                             )
+  LoadOptions                (                                               )
+  app   = QApplication       ( sys . argv                                    )
+  tasks = TasksWindow        (                                               )
+  tasks . showMaximized      (                                               )
+  sys   . exit               ( app . exec_ ( )                               )
 
 if __name__ == '__main__' :
-  main                       (                                             )
+  main                       (                                               )

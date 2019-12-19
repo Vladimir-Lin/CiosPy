@@ -295,6 +295,9 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
     # Tasks
     taskAction     = taskMenu . addAction ( "行程任務管理系統" )
     taskAction     . triggered . connect ( self . Tasks )
+    # People
+    peopleAction    = peopleMenu . addAction ( "人物管理系統" )
+    peopleAction    . triggered  . connect   ( self . GoPeople )
     # Eclipse
     # Java
     eclipseJavaAction = eclipseMenu . addAction ( "Java" )
@@ -490,6 +493,10 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
   def Tasks ( self ) :
     RunSystem ( "python " + ActualFile ( "Tasks/Tasks.py" ) )
     Speech ( "已經為您打開行程任務管理系統" )
+
+  def GoPeople ( self ) :
+    RunSystem ( "python " + ActualFile ( "People/People.py" ) )
+    Speech ( "已經為您打開人物管理系統" )
 
   def SMPlayer ( self ) :
     RunSystem ( "D:/Programs/SMPlayer/smplayer.exe" )

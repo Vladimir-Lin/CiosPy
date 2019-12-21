@@ -131,13 +131,13 @@ def LoadOptions              (                                             ) :
   global HomePath
   global Language
   global Settings
-  HomePath  = str            ( Path . home ( )                               )
-  STX       = LoadJSON       ( f"{HomePath}/CIOS/settings.json"              )
-  UserConf  = LoadJSON       ( f"{HomePath}/CIOS/user.json"                  )
-  STX       = MergeJSON      ( STX , UserConf                                )
-  TaskConf  = LoadJSON       ( f"{HomePath}/CIOS/tasks.json"                 )
-  Settings  = MergeJSON      ( STX , TaskConf                                )
-  Language  = Settings [ "Voice" ] [ "Language" ]
+  HomePath   = str           ( Path . home ( )                               )
+  STX        = LoadJSON      ( f"{HomePath}/CIOS/settings.json"              )
+  UserConf   = LoadJSON      ( f"{HomePath}/CIOS/user.json"                  )
+  STX        = MergeJSON     ( STX , UserConf                                )
+  PeopleConf = LoadJSON      ( f"{HomePath}/CIOS/people.json"                )
+  Settings   = MergeJSON     ( STX , PeopleConf                              )
+  Language   = Settings [ "Voice" ] [ "Language" ]
   return True
 
 def main                     (                                             ) :

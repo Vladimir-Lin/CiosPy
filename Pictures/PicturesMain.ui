@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PeopleMain</class>
- <widget class="QMainWindow" name="PeopleMain">
+ <class>PicturesMain</class>
+ <widget class="QMainWindow" name="PicturesMain">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -14,7 +14,7 @@
    <string>People</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="People.qrc">
+   <iconset resource="Pictures.qrc">
     <normaloff>:/images/crowd.png</normaloff>:/images/crowd.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget"/>
@@ -114,7 +114,7 @@
   </widget>
   <action name="actionQuit">
    <property name="icon">
-    <iconset resource="People.qrc">
+    <iconset resource="Pictures.qrc">
      <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
    </property>
    <property name="text">
@@ -143,13 +143,13 @@
   </action>
  </widget>
  <resources>
-  <include location="People.qrc"/>
+  <include location="Pictures.qrc"/>
  </resources>
  <connections>
   <connection>
    <sender>actionQuit</sender>
    <signal>triggered()</signal>
-   <receiver>PeopleMain</receiver>
+   <receiver>PicturesMain</receiver>
    <slot>Quit()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -165,7 +165,7 @@
   <connection>
    <sender>actionMeridian</sender>
    <signal>triggered()</signal>
-   <receiver>PeopleMain</receiver>
+   <receiver>PicturesMain</receiver>
    <slot>Meridians()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -181,7 +181,7 @@
   <connection>
    <sender>actionAcupunctures</sender>
    <signal>triggered()</signal>
-   <receiver>PeopleMain</receiver>
+   <receiver>PicturesMain</receiver>
    <slot>Acupunctures()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -197,7 +197,7 @@
   <connection>
    <sender>actionCrowdListings</sender>
    <signal>triggered()</signal>
-   <receiver>PeopleMain</receiver>
+   <receiver>PicturesMain</receiver>
    <slot>CrowdListings()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -213,7 +213,7 @@
   <connection>
    <sender>actionCrowdViews</sender>
    <signal>triggered()</signal>
-   <receiver>PeopleMain</receiver>
+   <receiver>PicturesMain</receiver>
    <slot>CrowdViews()</slot>
    <hints>
     <hint type="sourcelabel">

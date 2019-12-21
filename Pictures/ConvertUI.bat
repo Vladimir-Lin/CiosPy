@@ -1,5 +1,5 @@
 D:
-cd \CIOS\CiosPy\People
+cd \CIOS\CiosPy\Pictures
 
-python -m PyQt5.uic.pyuic -x PeopleMain.ui -o PeopleMain.py
-pyrcc5 -o Resources.py People.qrc
+python -m PyQt5.uic.pyuic -x PicturesMain.ui -o PicturesMain.py
+pyrcc5 -o Resources.py Pictures.qrc

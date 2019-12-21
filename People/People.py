@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+##############################################################################
 import os
 import sys
 sys . path . append ( os . path . dirname ( os . path . abspath (__file__) ) + "/../Libs" )
@@ -26,9 +28,14 @@ import Actions
 import CIOS
 from   CIOS  . Voice     . Recognizer import Recognizer
 from   CIOS  . Voice     . Audio      import AudioPlayer
+##############################################################################
 from   CIOS  . Documents . JSON       import Load  as LoadJSON
 from   CIOS  . Documents . JSON       import Merge as MergeJSON
 from   CIOS  . Documents . Commands   import CommandsMapper
+##############################################################################
+from   CIOS  . Database               import Tables
+from   CIOS  . Database               import TablePlans
+from   CIOS  . Database               import Templates
 ##############################################################################
 from   PyQt5                          import QtCore
 from   PyQt5                          import QtGui
@@ -117,10 +124,12 @@ class PeopleWindow              ( MainWindow                               ) :
     return
 
   def CrowdListings             ( self                                     ) :
-    cl   = CrowdListings        ( self . mdi )
-    self . addMdi               ( cl )
+    cl   = CrowdListings        ( self . mdi                                 )
+    self . addMdi               ( cl                                         )
     cl   . setWindowTitle       ( "人物列表" )
-    cl   . show ( )
+    cl   . show                 (                                            )
+    cl   . setTablePlan         ( TablePlans . PeoplePlan                    )
+    cl   . startup              (                                            )
     return
 
   def CrowdViews                ( self                                     ) :

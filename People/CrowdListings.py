@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+##############################################################################
 import os
 import sys
 sys . path . append ( os . path . dirname ( os . path . abspath (__file__) ) + "/../Libs" )
@@ -80,7 +82,7 @@ class CrowdListings ( TreeWidget ) :
 
   ############################################################################
 
-#  emitRefresh       = pyqtSignal ( )
+  emitRefresh       = pyqtSignal ( )
 #  emitItemFlags     = pyqtSignal ( QTreeWidgetItem , str )
 #  emitNewItem       = pyqtSignal ( str , str , str , str , str )
 #  emitItemProerties = pyqtSignal ( QTreeWidgetItem , str , str , str )
@@ -91,36 +93,38 @@ class CrowdListings ( TreeWidget ) :
     ##########################################################################
     super ( TreeWidget , self ) . __init__   ( parent )
     ##########################################################################
+    self . TablePlan = { }
+    ##########################################################################
 #    self . insertAction = QShortcut ( QKeySequence ( Qt.Key_Insert ) , self  )
 #    self . deleteAction = QShortcut ( QKeySequence ( Qt.Key_Delete ) , self  )
 #    self . insertAction . activated . connect ( self . Insert                )
 #    self . deleteAction . activated . connect ( self . Delete                )
+    self . emitRefresh              . connect ( self . Refresh               )
     ##########################################################################
     self . Configure      ( )
     ##########################################################################
 
   ############################################################################
 
-  def Configure ( self ) :
+  def Configure                           ( self                           ) :
     Labels = [ "人物名稱" , "目前狀態" , "長編號" , "位序編號" , "" ]
-    fnt    = self . font                  (                              )
-    fnt    . setPixelSize                 ( 18                           )
-    self   . setFont                      ( fnt                          )
-    self   . setAttribute                 ( Qt   . WA_InputMethodEnabled )
-    self   . setDragDropMode              ( self . DragDrop              )
-    self   . setRootIsDecorated           ( False                        )
-    self   . setAlternatingRowColors      ( True                         )
-    self   . setHorizontalScrollBarPolicy ( Qt   . ScrollBarAsNeeded     )
-    self   . setVerticalScrollBarPolicy   ( Qt   . ScrollBarAsNeeded     )
-    self   . setSelectionMode             ( self . SingleSelection       )
-    self   . setColumnCount               ( 5                            )
-    for i in range ( 1 , 5 ) :
-      self . setColumnHidden              ( i    , True                  )
-    self   . setColumnWidth               ( 4    , 5                     )
-#    self   . setHeaderLabels              ( Labels                       )
-    self   . setCentralLabels             ( Labels                       )
-#    self   . itemDoubleClicked . connect  ( self . doubleClicked         )
-#    self   . itemClicked       . connect  ( self . singleClicked         )
+    fnt    = self . font                  (                                  )
+    fnt    . setPixelSize                 ( 18                               )
+    self   . setFont                      ( fnt                              )
+    self   . setAttribute                 ( Qt   . WA_InputMethodEnabled     )
+    self   . setDragDropMode              ( self . DragDrop                  )
+    self   . setRootIsDecorated           ( False                            )
+    self   . setAlternatingRowColors      ( True                             )
+    self   . setHorizontalScrollBarPolicy ( Qt   . ScrollBarAsNeeded         )
+    self   . setVerticalScrollBarPolicy   ( Qt   . ScrollBarAsNeeded         )
+    self   . setSelectionMode             ( self . ContiguousSelection       )
+    self   . setColumnCount               ( 5                                )
+#    for      i in range                   ( 1    , 5                       ) :
+#      self . setColumnHidden              ( i    , True                      )
+    self   . setColumnWidth               ( 4    , 5                         )
+    self   . setCentralLabels             ( Labels                           )
+    self   . itemDoubleClicked . connect  ( self . doubleClicked             )
+    self   . itemClicked       . connect  ( self . singleClicked             )
     return
 
   ############################################################################
@@ -149,9 +153,41 @@ class CrowdListings ( TreeWidget ) :
 
   ############################################################################
 
+  def setTablePlan ( self , plan ) :
+    self . TablePlan = plan
+    return
+
+  ############################################################################
+
   def startup ( self ) :
     self . clear ( )
     threading . Thread ( target = self . loading ) . start ( )
+    return True
+
+  ############################################################################
+
+  def loading ( self ) :
+    ##########################################################################
+    SC = SqlConnection        (        )
+    SC . ConnectTo            ( CiosDB )
+    if not SC . isConnected   (        ) :
+      return False
+    ##########################################################################
+    SC   . Prepare            (        )
+    ##########################################################################
+        print ( self . TablePlan )
+    ##########################################################################
+    SC   . Close              (        )
+    self . emitRefresh . emit (        )
+    ##########################################################################
+    return True
+
+  ############################################################################
+
+  def Refresh ( self )                                                       :
+    ##########################################################################
+
+    ##########################################################################
     return True
 
   ############################################################################

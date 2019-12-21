@@ -61,9 +61,8 @@ from   CIOS  . Qt . MenuManager       import MenuManager
 from   CIOS  . Qt . TreeWidget        import TreeWidget
 from   CIOS  . Qt . MainWindow        import MainWindow
 ##############################################################################
-from   PeopleMain        import Ui_PeopleMain
+from   PicturesMain      import Ui_PicturesMain
 import Resources
-from   CrowdListings     import CrowdListings
 ##############################################################################
 
 SysMenu     = None
@@ -76,12 +75,12 @@ HomePath    = ""
 
 ##############################################################################
 
-class PeopleWindow              ( MainWindow                               ) :
+class PicturesWindow            ( MainWindow                               ) :
 
   def __init__                  ( self , parent = None                     ) :
     super                       ( MainWindow , self ) .  __init__ ( parent   )
     ##########################################################################
-    self . ui = Ui_PeopleMain   (                                            )
+    self . ui = Ui_PicturesMain (                                            )
     self . ui . setupUi         ( self                                       )
     self . Configure            (                                            )
     ##########################################################################
@@ -108,25 +107,6 @@ class PeopleWindow              ( MainWindow                               ) :
   def startup ( self ) :
     return
 
-  def Meridians                 ( self                                     ) :
-    print ( "Meridians" )
-    return
-
-  def Acupunctures              ( self                                     ) :
-    print ( "Acupunctures" )
-    return
-
-  def CrowdListings             ( self                                     ) :
-    cl   = CrowdListings        ( self . mdi )
-    self . addMdi               ( cl )
-    cl   . setWindowTitle       ( "人物列表" )
-    cl   . show ( )
-    return
-
-  def CrowdViews                ( self                                     ) :
-    print ( "CrowdViews" )
-    return
-
 def LoadOptions              (                                             ) :
   global HomePath
   global Language
@@ -135,18 +115,18 @@ def LoadOptions              (                                             ) :
   STX       = LoadJSON       ( f"{HomePath}/CIOS/settings.json"              )
   UserConf  = LoadJSON       ( f"{HomePath}/CIOS/user.json"                  )
   STX       = MergeJSON      ( STX , UserConf                                )
-  TaskConf  = LoadJSON       ( f"{HomePath}/CIOS/tasks.json"                 )
+  TaskConf  = LoadJSON       ( f"{HomePath}/CIOS/pictures.json"              )
   Settings  = MergeJSON      ( STX , TaskConf                                )
   Language  = Settings [ "Voice" ] [ "Language" ]
   return True
 
 def main                     (                                             ) :
   LoadOptions                (                                               )
-  app   = QApplication       ( sys . argv                                    )
-  tasks = PeopleWindow       (                                               )
-  tasks . showMaximized      (                                               )
-  tasks . startup            (                                               )
-  sys   . exit               ( app . exec_ ( )                               )
+  app      = QApplication    ( sys . argv                                    )
+  pictures = PicturesWindow  (                                               )
+  pictures . showMaximized   (                                               )
+  pictures . startup         (                                               )
+  sys      . exit            ( app . exec_ ( )                               )
 
 if __name__ == '__main__' :
   main                       (                                               )

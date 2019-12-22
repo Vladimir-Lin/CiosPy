@@ -576,6 +576,7 @@ class UuidListings ( TreeWidget ) :
     SC       . LockWrites    ( [ Table ] )
     ##########################################################################
     QQ      = f"select `uuid` from {Table} order by `uuid` desc limit 0,1 ;"
+    SC      . Query         ( QQ )
     XC      = SC . FetchOne (    )
     if not ( ( not XC ) or ( XC == None  ) or ( XC is None ) ) :
       UID   = XC [ 0 ]

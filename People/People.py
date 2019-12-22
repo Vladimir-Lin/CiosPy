@@ -129,6 +129,7 @@ class PeopleWindow              ( MainWindow                               ) :
     cl   . setWindowTitle       ( "人物列表" )
     cl   . show                 (                                            )
     cl   . setTablePlan         ( TablePlans . PeoplePlan                    )
+    cl   . setLocality          ( 1002                                       )
     cl   . startup              (                                            )
     return
 

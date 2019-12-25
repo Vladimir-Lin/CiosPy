@@ -298,6 +298,9 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
     # People
     peopleAction    = peopleMenu . addAction ( "人物管理系統" )
     peopleAction    . triggered  . connect   ( self . GoPeople )
+    # Pictures
+    picturesAction  = galleryMenu . addAction ( "圖庫管理系統" )
+    picturesAction  . triggered   . connect   ( self . GoPictures )
     # Eclipse
     # Java
     eclipseJavaAction = eclipseMenu . addAction ( "Java" )
@@ -497,6 +500,10 @@ class SystemTrayIcon ( QSystemTrayIcon ) :
   def GoPeople ( self ) :
     RunSystem ( "python " + ActualFile ( "People/People.py" ) )
     Speech ( "已經為您打開人物管理系統" )
+
+  def GoPictures ( self ) :
+    RunSystem ( "python " + ActualFile ( "Pictures/Pictures.py" ) )
+    Speech ( "已經為您打開圖庫管理系統" )
 
   def SMPlayer ( self ) :
     RunSystem ( "D:/Programs/SMPlayer/smplayer.exe" )
